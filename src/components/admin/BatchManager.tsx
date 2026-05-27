@@ -85,9 +85,13 @@ export default function BatchManager() {
           {editingId ? "Edit Batch Details" : "Add New Batch"}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+           <Input placeholder="Course Title" value={form.subjects} onChange={(e) => setForm({ ...form, subjects: e.target.value })} className="text-sm" />
+
           <Input type="number" placeholder="Class" value={form.className} onChange={(e) => setForm({ ...form, className: e.target.value })} className="text-sm" />
-          <Input placeholder="Subject" value={form.subjects} onChange={(e) => setForm({ ...form, subjects: e.target.value })} className="text-sm" />
+         
           <Input placeholder="Timing" value={form.timing} onChange={(e) => setForm({ ...form, timing: e.target.value })} className="text-sm" />
+
           <Input type="number" placeholder="Fees" value={form.fees} onChange={(e) => setForm({ ...form, fees: e.target.value })} className="text-sm" />
         </div>
         

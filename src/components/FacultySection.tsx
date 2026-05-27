@@ -128,7 +128,7 @@ const handleShowLess = () => {
             World-Class Mentors
           </motion.span>
           <h2 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight mt-4">
-            Meet <span className="text-blue-600">Our Faculty</span>
+            Our <span className="text-blue-600">Expert Mentors</span>
           </h2>
           <p className="mt-6 text-gray-500 max-w-2xl mx-auto md:text-lg text-sm leading-relaxed font-medium">
             "Learn from Highly Experienced Educators Dedicated to Your Navodaya Success"

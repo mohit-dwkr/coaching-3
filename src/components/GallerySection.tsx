@@ -125,9 +125,9 @@ return (
         </div>
 
         <h2 className="text-3xl md:text-6xl font-black text-gray-900 tracking-tight mt-4">
-          Life at our{" "}
+          Life at {" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-indigo-600">
-            Institute
+            Toppers Academy
           </span>
         </h2>
 

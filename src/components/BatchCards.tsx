@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, IndianRupee, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { Clock, IndianRupee, ChevronDown, ChevronUp, Sparkles, GraduationCap, Calendar, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/supabaseClient";
@@ -75,96 +75,149 @@ export default function BatchCards() {
             <Sparkles className="w-4 h-4 animate-pulse" />
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight">
-            Our <span className=" text-blue-600">Premium Batches</span>
+            Our <span className=" text-blue-600">Target Batches</span>
           </h2>
           <p className="mt-4 text-gray-600 max-w-2xl mx-auto text-sm md:text-lg leading-relaxed">
             "High-Performance Courses for Navodaya Entrance Preparation with Expert Guidance and Proven Results"
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          <AnimatePresence mode="popLayout">
-            {displayedBatches.map((b, i) => (
-              <motion.div
-                key={b.id}
-                layout
-                initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                whileHover={{ 
-                  y: -12, 
-                  transition: { duration: 0.3, ease: "easeOut" } 
-                }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="group relative bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/50 p-8 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] hover:shadow-[0_40px_80px_-30px_rgba(59,130,246,0.25)] transition-all duration-500 overflow-hidden"
+
+{/* --- CARDS SECTION START (EXACT HTML/CSS CUSTOM DESIGN RE-ENGINEERED IN TAILWIND) --- */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[28px]">
+  <AnimatePresence mode="popLayout">
+    {displayedBatches.map((b, i) => {
+      // 1. Static Premium Images Array for Premium Look
+      const staticImages = [
+        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1513258496099-48168024aec0?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop"
+      ];
+
+      // 2. Dynamic Vertical Gradient Tint Layouts (Aapki CSS logic ke mutabik)
+      const cardTints = [
+        "bg-gradient-to-b from-[#ffffff] via-[#ffffff] to-[#f0f4ff]", // card-rms
+        "bg-gradient-to-b from-[#ffffff] via-[#ffffff] to-[#fff7ed]", // card-shramodaya
+        "bg-gradient-to-b from-[#ffffff] via-[#ffffff] to-[#f0fdf4]"  // card-sainik
+      ];
+      const currentTint = cardTints[i % cardTints.length];
+
+      // 3. Dynamic Accent Badges Design (Top Left Corner on Image)
+      const badges = [
+        { text: "Popular", bg: "bg-[#ea580c]" },
+        { text: "Best Seller", bg: "bg-[#ea580c]" },
+        { text: "New Batch", bg: "bg-[#16a34a]" }
+      ];
+      const currentBadge = badges[i % badges.length];
+
+      return (
+        <motion.div
+          key={b.id}
+          layout
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+          whileHover={{ 
+            y: -8, 
+            boxShadow: "0 25px 50px rgba(51, 102, 255, 0.1)",
+            borderColor: "rgba(51, 102, 255, 0.25)"
+          }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className={`group flex flex-col rounded-[24px] overflow-hidden border border-[#e2e8f0] shadow-[0_4px_20px_rgba(15,23,42,0.03)] transition-all duration-300 ${currentTint}`}
+        >
+          {/* IMAGE WORK - TOP BANNER POSITION */}
+          <div className="relative w-full h-[200px] overflow-hidden">
+            <img 
+              src={staticImages[i % staticImages.length]} 
+              alt="Coaching Batch" 
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            {/* Displaying condition for badge since 2nd index had it commented in HTML */}
+            {i % 3 !== 1 && (
+              <div className={`absolute top-4 left-4 text-white px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-[0.5px] shadow-[0_4px_10px_rgba(0,0,0,0.15)] z-10 ${currentBadge.bg}`}>
+                {currentBadge.text}
+              </div>
+            )}
+          </div>
+
+          {/* PREMIUM INTERNAL CONTENT */}
+          <div className="p-7 flex flex-col flex-grow">
+            <div className="course-header">
+              {/* --- SUBJECT HEADER IS COMMENTED OUT AS REQUESTED --- */}
+              <h3 className="text-[22px] text-[#0f172a] font-bold leading-[1.3]">{b.subjects}</h3>
+              <p className="mt-2.5 text-[#64748b] text-[14px] mechanics-p leading-[1.6]">
+                Complete preparation batch with study material.
+              </p>
+            </div>
+
+            {/* 2x2 GRID INSIDE CARD CONTENT */}
+            <div className="grid grid-cols-2 gap-3.5 mt-6">
+              {/* Class Info Box */}
+              <div className="bg-white/80 border border-[#e2e8f0]/90 p-3.5 px-3.5 rounded-[14px] flex items-center gap-3 transition-all duration-300 group-hover:bg-white group-hover:border-[#3366ff]/15 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <div className="text-[#3366ff] text-base bg-[#3366ff]/[0.06] w-9 h-9 flex items-center justify-center rounded-[10px] shrink-0">
+                  <GraduationCap className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[#94a3b8] text-[11px] font-semibold uppercase block">Class</span>
+                  <h4 className="text-[#334155] text-[10px]  md:text-[14px] font-bold mt-0.5 truncate">{b.class_name}</h4>
+                </div>
+              </div>
+
+              {/* Timing Info Box */}
+              <div className="bg-white/80 border border-[#e2e8f0]/90 p-3.5 px-3.5 rounded-[14px] flex items-center gap-3 transition-all duration-300 group-hover:bg-white group-hover:border-[#3366ff]/15 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <div className="text-[#3366ff] text-base bg-[#3366ff]/[0.06] w-9 h-9 flex items-center justify-center rounded-[10px] shrink-0">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[#94a3b8] text-[11px] font-semibold uppercase block">Timing</span>
+                  <h4 className="text-[#334155] text-[10px] md:text-[14px] font-bold mt-0.5 truncate">{b.start_time}  {b.end_time}</h4>
+                </div>
+              </div>
+
+              {/* Duration Box */}
+              <div className="bg-white/80 border border-[#e2e8f0]/90 p-3.5 px-3.5 rounded-[14px] flex items-center gap-3 transition-all duration-300 group-hover:bg-white group-hover:border-[#3366ff]/15 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <div className="text-[#3366ff] text-base bg-[#3366ff]/[0.06] w-9 h-9 flex items-center justify-center rounded-[10px] shrink-0">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[#94a3b8] text-[11px] font-semibold uppercase block">Duration</span>
+                  <h4 className="text-[#334155] text-[10px]  md:text-[14px] font-bold mt-0.5 truncate">12 Months</h4>
+                </div>
+              </div>
+
+              {/* Seats Box */}
+              <div className="bg-white/80 border border-[#e2e8f0]/90 p-3.5 px-3.5 rounded-[14px] flex items-center gap-3 transition-all duration-300 group-hover:bg-white group-hover:border-[#3366ff]/15 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <div className="text-[#3366ff] text-base bg-[#3366ff]/[0.06] w-9 h-9 flex items-center justify-center rounded-[10px] shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[#94a3b8] text-[11px] font-semibold uppercase block">Seats</span>
+                  <h4 className="text-[#334155] text-[10px]  md:text-[14px] font-bold mt-0.5 truncate">50 Students</h4>
+                </div>
+              </div>
+            </div>
+
+            {/* CARD BOTTOM SPLIT */}
+            <div className="mt-7 pt- border-t border-dashed border-[#e2e8f0] flex justify-between items-center">
+              <div className="text-[26px] text-[#0f172a] font-bold">
+                <span className="text-[20px] text-[#3366ff] font-bold">₹</span>
+                {b.price}
+                <span className="text-[13px] text-[#64748b] font-medium">/mo</span>
+              </div>
+              <Button 
+                className="bg-[#3366ff] hover:bg-[#1d4ed8] text-white px-6 py-3 h-auto rounded-[12px] text-[14px] font-bold transition-all duration-200 shadow-[0_4px_14px_rgba(51,102,255,0.2)] hover:shadow-[0_6px_18px_rgba(51,102,255,0.35)] hover:-translate-y-0.5 active:translate-y-0"
+                asChild
               >
-                <div className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_50%)] from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                <div className="flex justify-between items-center mb-8 relative z-10">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-primary blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
-                    <div className="relative px-6 py-2 rounded-2xl bg-slate-900 text-white text-[12px] font-black tracking-[0.2em] shadow-sm">
-                       Class {b.class_name}
-                    </div>
-                  </div>
-                </div>
-
-                <h3 className="relative z-10 text-xl font-black text-gray-800 mb-6 tracking-tight group-hover:text-blue-600 transition-colors duration-300">
-                  <span className="text-sm font-medium">Subject - </span>{b.subjects}
-                </h3>
-
-                <div className="relative z-10 space-y-4 mb-10">
-                  <div className="flex items-center gap-4 p-4 rounded-[1.5rem] bg-white/50 border border-white shadow-sm group-hover:shadow-md transition-all duration-300">
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                      <Clock className="w-5 h-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Timing</span>
-                      <span className="text-sm font-bold text-gray-700">{b.start_time} - {b.end_time}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 px-2">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Course Fee</span>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className="bg-primary/10 p-1 rounded-md">
-                          <IndianRupee className="w-4 h-4 text-primary font-bold" />
-                        </div>
-                        <span className="text-3xl font-black text-gray-900 tracking-tighter">{b.price}</span>
-                        <span className="text-gray-500 text-xs font-bold ml-1">/month</span>
-                      </div>
-                    </div>
-                    <div className="h-10 w-10 rounded-full border-2 border-dashed border-gray-200 flex items-center justify-center group-hover:border-primary/50 group-hover:rotate-45 transition-all duration-700">
-                        <div className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse" />
-                    </div>
-                  </div>
-                </div>
-
-                <Button 
-                  className="relative z-10 w-full h-16 rounded-[1.5rem] bg-blue-600 hover:bg-blue-700 text-white font-black text-lg shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] hover:shadow-primary/40 transition-all duration-500 group-hover:scale-[1.03] active:scale-95" 
-                  asChild
-                >
-                  <a href="#contact" className="flex items-center justify-center gap-3">
-                    Enroll Now
-                    <motion.span
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                    >
-                      →
-                    </motion.span>
-                  </a>
-                </Button>
-
-                <div className="absolute inset-0 rounded-[2.5rem] p-[2px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-r from-primary via-blue-400 to-purple-500 animate-[gradient_3s_linear_infinite]" 
-                        style={{ backgroundSize: '200% 200%' }} />
-                    <div className="absolute inset-[2px] bg-white rounded-[2.4rem]" />
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+                <a href="#contact">Enroll Now</a>
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      );
+    })}
+  </AnimatePresence>
+</div>
+{/* --- CARDS SECTION END --- */}
 
         {batches.length > 6 && (
           <div className="mt-16 text-center">
