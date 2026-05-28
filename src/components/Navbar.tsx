@@ -12,18 +12,18 @@ const links = [
 ];
 
 // Courses for Dropdown
-const courses = [
-  { label: "Navodaya Entrance Exam" },
-  { label: "Sainik School Entrance Exam" },
-  { label: "Shramodaya School Entrance Exam" },
-  { label: "Rastriya Milititary School Exam" },
-];
+// const courses = [
+//   { label: "Navodaya Entrance Exam" },
+//   { label: "Sainik School Entrance Exam" },
+//   { label: "Shramodaya School Entrance Exam" },
+//   { label: "Rastriya Milititary School Exam" },
+// ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("#home");
   const [isScrolled, setIsScrolled] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown state
+  // const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown state
   const location = useLocation();
   const [isMobileCoursesOpen, setIsMobileCoursesOpen] = useState(false);
 
@@ -125,7 +125,7 @@ export default function Navbar() {
           })}
 
           {/* Courses Dropdown */}
-          <div
+          {/* <div
             className="relative group"
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
@@ -136,7 +136,7 @@ export default function Navbar() {
             </button>
 
             {dropdownOpen && (
-              /* Width badha kar w-64 kar di hai (256px) */
+              
               <div className="absolute top-full left-0 w-64 bg-white shadow-2xl rounded-xl border border-border py-2 animate-in fade-in zoom-in-95 duration-200 mt-1">
                 {courses.map((course, index) => (
                   <div
@@ -150,7 +150,9 @@ export default function Navbar() {
                 ))}
               </div>
             )}
-          </div>
+          </div> */}
+
+          
           <Link to="/userlogin" className={`px-4 py-2 text-sm font-bold transition-all ${isSolid ? "text-muted-foreground hover:text-blue-700" : "text-white/70 hover:text-white"
             }`}>
             Study Material
@@ -204,7 +206,7 @@ export default function Navbar() {
 
 
           {/* Mobile Courses Section (Overlay Style) */}
-          <div className="py-3 border-b border-border/50">
+          {/* <div className="py-3 border-b border-border/50">
             <button
               onClick={() => setIsMobileCoursesOpen(true)} // Isse section open hoga
               className="flex items-center justify-between w-full text-base font-semibold text-foreground"
@@ -213,29 +215,29 @@ export default function Navbar() {
               <ChevronRight className="h-5 w-5 opacity-50" />
             </button>
 
-            {/* --- Mobile Sub-Menu Overlay --- */}
+           
             {isMobileCoursesOpen && (
               <div className="fixed inset-0 z-[60] bg-background animate-in slide-in-from-right duration-300 flex flex-col">
-                {/* Header of Sub-Menu */}
+               
                 <div className="flex items-center p-4 border-b border-border">
                   <button
                     onClick={() => setIsMobileCoursesOpen(false)}
                     className="flex items-center gap-2 text-blue-600 font-semibold"
                   >
-                    <ChevronDown className="h-5 w-5 rotate-90" /> {/* Back Arrow look */}
+                    <ChevronDown className="h-5 w-5 rotate-90" />
                     Back to Menu
                   </button>
                 </div>
 
-                {/* Courses List */}
+               
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
                   <h3 className="text-xl font-bold text-foreground mb-2">Our <span className="text-blue-500">Courses</span> </h3>
                   {courses.map((course) => (
                     <div
                       key={course.label}
                       onClick={() => {
-                        setOpen(false); // Main Mobile Menu band karega
-                        setIsMobileCoursesOpen(false); // Sub-menu band karega
+                        setOpen(false); 
+                        setIsMobileCoursesOpen(false); 
                       }}
                       className="flex items-center justify-between p-4 bg-secondary/30 rounded-xl text-base font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     >
@@ -245,14 +247,14 @@ export default function Navbar() {
                   ))}
                 </div>
 
-                {/* Footer of Sub-Menu (Optional) 
+                Footer of Sub-Menu (Optional) 
       <div className="p-4 border-t border-border bg-muted/20">
         <p className="text-xs text-muted-foreground text-center">Select a course to view details</p>
       </div>
-      */}
+     
               </div>
             )}
-          </div>
+          </div> */}
 
           <Link to="/dashboard" onClick={() => setOpen(false)} className="block py-3 text-base font-semibold border-b border-border/50 text-foreground">
             Study Material
