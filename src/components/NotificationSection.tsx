@@ -20,7 +20,7 @@ const NotificationSection = ({ profile }: { profile?: any }) => {
     queryKey: ['notifications', profile?.class],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('Coaching-2_Notifications')
+        .from('Coaching-3_Notifications')
         .select('*')
         .or(`target_class.eq.All,target_class.eq.${profile?.class}`)
         .order('created_at', { ascending: false })

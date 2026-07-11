@@ -17,7 +17,7 @@ export default function HeroSection() {
     queryKey: ["hero"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("Coaching-2_Hero")
+        .from("Coaching-3_Hero")
         .select("heading, subheading, highlight_word, image_url")
         .limit(1);
 

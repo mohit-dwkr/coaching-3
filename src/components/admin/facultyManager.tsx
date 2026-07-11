@@ -22,7 +22,7 @@ export default function FacultyManager() {
 
   // 1. Database se data load karna
   const fetchFaculty = async () => {
-    const { data } = await supabase.from("Coaching-2_Faculty").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("Coaching-3_Faculty").select("*").order("created_at", { ascending: false });
     if (data) setFacultyList(data);
   };
 
@@ -30,7 +30,7 @@ export default function FacultyManager() {
     fetchFaculty();
   }, []);
 
-  // 2. Image Bucket Upload Logic (coaching-2_data/faculty)
+  // 2. Image Bucket Upload Logic (coaching-3_data/faculty)
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -40,10 +40,10 @@ export default function FacultyManager() {
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `faculty_images/${fileName}`;
+      const filePath = `faculty_images-3/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('coaching-2_data')
+        .from('coaching-3_data')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
@@ -51,18 +51,18 @@ export default function FacultyManager() {
       // Upload successful hone ke baad old image delete karo
     if (isEditing && oldImageUrl) {
       const oldPath = oldImageUrl.split(
-        "/storage/v1/object/public/coaching-2_data/"
+        "/storage/v1/object/public/coaching-3_data/"
       )[1];
 
       if (oldPath) {
         await supabase.storage
-          .from("coaching-2_data")
+          .from("coaching-3_data")
           .remove([oldPath]);
       }
     }
 
 
-      const { data } = supabase.storage.from('coaching-2_data').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('coaching-3_data').getPublicUrl(filePath);
       setFormData({ ...formData, image: data.publicUrl });
       toast.success("Image uploaded Successfully!");
     } catch (error: any) {
@@ -89,10 +89,10 @@ export default function FacultyManager() {
 
     try {
       if (isEditing) {
-        await supabase.from("Coaching-2_Faculty").update(dbPayload).eq("id", isEditing);
+        await supabase.from("Coaching-3_Faculty").update(dbPayload).eq("id", isEditing);
         toast.success("Faculty updated!");
       } else {
-        await supabase.from("Coaching-2_Faculty").insert([dbPayload]);
+        await supabase.from("Coaching-3_Faculty").insert([dbPayload]);
         toast.success("New faculty added!");
       }
       resetForm();
@@ -129,19 +129,19 @@ const handleDelete = async (faculty: any) => {
     // Delete image from bucket
     if (faculty.image_url) {
       const imagePath = faculty.image_url.split(
-        "/storage/v1/object/public/coaching-2_data/"
+        "/storage/v1/object/public/coaching-3_data/"
       )[1];
 
       if (imagePath) {
         await supabase.storage
-          .from("coaching-2_data")
+          .from("coaching-3_data")
           .remove([imagePath]);
       }
     }
 
     // Delete database row
     const { error } = await supabase
-      .from("Coaching-2_Faculty")
+      .from("Coaching-3_Faculty")
       .delete()
       .eq("id", faculty.id);
 

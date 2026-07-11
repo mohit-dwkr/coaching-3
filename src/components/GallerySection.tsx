@@ -46,7 +46,7 @@ export default function GallerySection() {
     queryKey: ["gallery", page],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("Coaching-2_Gallery")
+        .from("Coaching-3_Gallery")
         .select("id, image_url, caption")
         .order("created_at", { ascending: false })
         .range(page * 6, page * 6 + 5);

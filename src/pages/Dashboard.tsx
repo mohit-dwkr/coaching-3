@@ -96,7 +96,7 @@ export default function Dashboard() {
           data: profileData,
           error: profileError,
         } = await supabase
-          .from("student_approvals")
+          .from("Coaching-3_StudentApprovals")
           .select("*")
           .eq("user_id", userId)
           .maybeSingle();
@@ -171,7 +171,7 @@ export default function Dashboard() {
         {
           event: "UPDATE",
           schema: "public",
-          table: "student_approvals",
+          table: "Coaching-3_StudentApprovals",
           filter: `user_id=eq.${profile.user_id}`,
         },
 
@@ -267,7 +267,7 @@ export default function Dashboard() {
       };
 
       const { error } = await supabase
-        .from("student_approvals")
+        .from("Coaching-3_StudentApprovals")
         .update(updatedPayload)
         .eq("user_id", profile.user_id);
 

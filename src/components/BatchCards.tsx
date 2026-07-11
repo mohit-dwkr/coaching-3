@@ -23,7 +23,7 @@ export default function BatchCards() {
     queryKey: ["batches"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("Coaching-2_Batches")
+        .from("Coaching-3_Batches")
         .select("id, class_name, subjects, start_time, end_time, price")
         .order("created_at", { ascending: false });
 

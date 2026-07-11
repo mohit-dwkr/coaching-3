@@ -43,7 +43,7 @@ export default function UserLogin() {
         const userId = session.user.id;
 
         const { data: profile } = await supabase
-          .from("student_approvals")
+          .from("Coaching-3_StudentApprovals")
           .select("status")
           .eq("user_id", userId)
           .maybeSingle();
@@ -177,7 +177,7 @@ if (!studentClass) {
         data: existingProfile,
         error: fetchError,
       } = await supabase
-        .from("student_approvals")
+        .from("Coaching-3_StudentApprovals")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
@@ -187,7 +187,7 @@ if (!studentClass) {
       // ✅ NEW USER
       if (!existingProfile) {
         const { error: insertError } = await supabase
-          .from("student_approvals")
+          .from("Coaching-3_StudentApprovals")
           .insert([
             {
               user_id: userId,
@@ -205,7 +205,7 @@ if (!studentClass) {
       // ✅ DENIED USER REAPPLY
       else if (existingProfile.status === "denied") {
         const { error: updateError } = await supabase
-          .from("student_approvals")
+          .from("Coaching-3_StudentApprovals")
           .update({
             name: form.name.trim(),
             mobile: form.mobile.trim(),

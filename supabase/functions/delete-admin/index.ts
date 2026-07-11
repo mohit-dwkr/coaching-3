@@ -67,7 +67,7 @@ serve(async (req) => {
     // ✅ Verify owner
     const { data: ownerData } =
       await supabaseAdmin
-        .from("admins")
+        .from("Coaching-3_Admins")
         .select("*")
         .eq("user_id", user.id)
         .eq("role", "owner")
@@ -105,7 +105,7 @@ serve(async (req) => {
     // ✅ Find admin
     const { data: adminData } =
       await supabaseAdmin
-        .from("admins")
+        .from("Coaching-3_Admins")
         .select("*")
         .eq("id", adminId)
         .maybeSingle();
@@ -158,7 +158,7 @@ serve(async (req) => {
     // ✅ Delete admin row
     const { error: deleteRowError } =
       await supabaseAdmin
-        .from("admins")
+        .from("Coaching-3_Admins")
         .delete()
         .eq("id", adminId);
 

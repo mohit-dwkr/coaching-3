@@ -85,7 +85,7 @@ export default function Admin() {
   // ✅ Fetch All Admins
   const fetchAdmins = async () => {
     const { data, error } = await supabase
-      .from("admins")
+      .from("Coaching-3_Admins")
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -108,7 +108,7 @@ export default function Admin() {
 
       // ✅ Verify admin
       const { data: adminData, error } = await supabase
-        .from("admins")
+        .from("Coaching-3_Admins")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();

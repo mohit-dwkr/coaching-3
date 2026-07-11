@@ -62,7 +62,7 @@ serve(async (req) => {
     // ✅ Verify owner
     const { data: ownerData } =
       await supabaseAdmin
-        .from("admins")
+        .from("Coaching-3_Admins")
         .select("*")
         .eq("user_id", user.id)
         .eq("role", "owner")
@@ -101,7 +101,7 @@ serve(async (req) => {
     // ✅ Check existing admin
     const { data: existingAdmin } =
       await supabaseAdmin
-        .from("admins")
+        .from("Coaching-3_Admins")
         .select("*")
         .eq("email", email)
         .maybeSingle();
@@ -127,7 +127,7 @@ serve(async (req) => {
         email,
         {
           redirectTo:
-            "https://coaching-2.netlify.app/set-password",
+            "https://coaching-3.netlify.app/set-password",
         }
       );
 
@@ -148,7 +148,7 @@ serve(async (req) => {
     // ✅ Insert into admins table
     const { error: insertError } =
       await supabaseAdmin
-        .from("admins")
+        .from("Coaching-3_Admins")
         .insert({
           email,
           role,

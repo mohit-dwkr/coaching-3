@@ -23,7 +23,7 @@ const StudentManager = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('student_approvals')
+        .from('Coaching-3_StudentApprovals')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -41,7 +41,7 @@ const StudentManager = () => {
  const approveStudent = async (id: string) => {
   try {
     const { error } = await supabase
-      .from('student_approvals')
+      .from('Coaching-3_StudentApprovals')
       .update({ status: 'approved' })
       .eq('id', id);
 
@@ -59,7 +59,7 @@ const StudentManager = () => {
 
   try {
     const { error } = await supabase
-      .from('student_approvals')
+      .from('Coaching-3_StudentApprovals')
      .update({ status: 'denied' })   // 🔥 CHANGE
       .eq('id', id);
 

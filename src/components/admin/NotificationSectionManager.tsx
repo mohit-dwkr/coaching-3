@@ -25,7 +25,7 @@ const NotificationSectionManager = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('Coaching-2_Notifications')
+      .from('Coaching-3_Notifications')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -43,13 +43,13 @@ const NotificationSectionManager = () => {
 
     if (editingId) {
       const { error } = await supabase
-        .from('Coaching-2_Notifications')
+        .from('Coaching-3_Notifications')
         .update(payload)
         .eq('id', editingId);
       if (!error) toast.success('Notification Updated!');
     } else {
       const { error } = await supabase
-        .from('Coaching-2_Notifications')
+        .from('Coaching-3_Notifications')
         .insert([payload]);
       if (!error) toast.success('Notification Sent!');
     }
@@ -61,7 +61,7 @@ const NotificationSectionManager = () => {
   const deleteNotification = async (id: string) => {
     if (window.confirm('Kya aap ise sach mein delete karna chahte hain?')) {
       const { error } = await supabase
-        .from('Coaching-2_Notifications')
+        .from('Coaching-3_Notifications')
         .delete()
         .eq('id', id);
       

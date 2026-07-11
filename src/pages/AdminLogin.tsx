@@ -28,7 +28,7 @@ export default function AdminLogin() {
 
       // ✅ Verify admin access
       const { data: adminData } = await supabase
-        .from("admins")
+        .from("Coaching-3_Admins")
         .select("id")
         .eq("user_id", user.id)
         .maybeSingle();
@@ -70,7 +70,7 @@ export default function AdminLogin() {
     // ✅ Verify admin exists
     const { data: adminData, error: adminError } =
       await supabase
-        .from("admins")
+        .from("Coaching-3_Admins")
         .select("*")
         .eq("user_id", data.user.id)
         .maybeSingle();

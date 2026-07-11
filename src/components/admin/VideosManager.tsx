@@ -26,7 +26,7 @@ const VideosManager = () => {
     try {
       setFetching(true);
       const { data, error } = await supabase
-        .from('video_lectures')
+        .from('Coaching-3_VideoLectures')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -65,7 +65,7 @@ const VideosManager = () => {
 
     try {
       setLoading(true);
-      const { error } = await supabase.from('video_lectures').insert([newVideo]);
+      const { error } = await supabase.from('Coaching-3_VideoLectures').insert([newVideo]);
       if (error) throw error;
 
       toast.success("Video Added Successfully!");
@@ -82,7 +82,7 @@ const VideosManager = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this video?")) return;
     try {
-      const { error } = await supabase.from('video_lectures').delete().eq('id', id);
+      const { error } = await supabase.from('Coaching-3_VideoLectures').delete().eq('id', id);
       if (error) throw error;
       setVideos(videos.filter(v => v.id !== id));
     } catch (err) {

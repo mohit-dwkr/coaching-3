@@ -27,7 +27,7 @@ const filteredList = materials.filter((m) => {
 
   const fetchMaterials = async () => {
     const { data } = await supabase
-      .from("Coaching-2_StudyMaterial")
+      .from("Coaching-3_StudyMaterial")
       .select("*")
       .order("created_at", { ascending: false });
     if (data) setMaterials(data);
@@ -36,7 +36,7 @@ const filteredList = materials.filter((m) => {
   const handleView = async (filePath) => {
     const { data } = await supabase
       .storage
-      .from("coaching-2_private")
+      .from("coaching-3_private")
       .createSignedUrl(filePath, 60);
 
     if (data?.signedUrl) {
@@ -64,18 +64,18 @@ const filteredList = materials.filter((m) => {
       // Agar Edit kar rahe hain aur nayi file select ki, toh purani delete karo
       if (editingId && form.file_url) {
         const oldPath = form.file_url;
-        await supabase.storage.from('coaching-2_private').remove([oldPath]);
+        await supabase.storage.from('coaching-3_private').remove([oldPath]);
       }
 
-      const filePath = `notes/${Date.now()}_${file.name}`;
+      const filePath = `notes-3/${Date.now()}_${file.name}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('coaching-2_private')
+        .from('coaching-3_private')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // const { data } = supabase.storage.from('coaching-2_private').getPublicUrl(filePath);
+      // const { data } = supabase.storage.from('coaching-3_private').getPublicUrl(filePath);
       setForm({ ...form, file_url: filePath });
       toast.success("New file uploaded!");
     } catch (error: any) {
@@ -102,7 +102,7 @@ const filteredList = materials.filter((m) => {
 
       if (editingId) {
         const { error } = await supabase
-          .from("Coaching-2_StudyMaterial")
+          .from("Coaching-3_StudyMaterial")
           .update(payload)
           .eq("id", editingId);
 
@@ -111,7 +111,7 @@ const filteredList = materials.filter((m) => {
         setEditingId(null);
       } else {
         const { error } = await supabase
-          .from("Coaching-2_StudyMaterial")
+          .from("Coaching-3_StudyMaterial")
           .insert([payload]);
 
         if (error) throw error;
@@ -157,18 +157,18 @@ const filteredList = materials.filter((m) => {
     try {
       // 1. Storage se file delete karne ke liye URL fetch karo
       const { data: item } = await supabase
-        .from("Coaching-2_StudyMaterial")
+        .from("Coaching-3_StudyMaterial")
         .select("file_url")
         .eq("id", id)
         .single();
 
       if (item?.file_url) {
         const filePath = item.file_url;
-        await supabase.storage.from('coaching-2_private').remove([filePath]);
+        await supabase.storage.from('coaching-3_private').remove([filePath]);
       }
 
       // 2. DB record delete karo
-      const { error } = await supabase.from("Coaching-2_StudyMaterial").delete().eq("id", id);
+      const { error } = await supabase.from("Coaching-3_StudyMaterial").delete().eq("id", id);
       if (error) throw error;
 
       toast.success("Material deleted!");

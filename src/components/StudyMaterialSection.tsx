@@ -30,14 +30,14 @@ export default function StudyMaterialSection({ userClass, onTotalCount, onSubjec
     queryFn: async () => {
       // 1. PDF Materials Fetching
       const { data: matData } = await supabase
-        .from("Coaching-2_StudyMaterial")
+        .from("Coaching-3_StudyMaterial")
         .select("*")
         .eq("student_class", userClass)
         .order("created_at", { ascending: false });
 
       // 2. Video Fetching
       const { data: vidData } = await supabase
-        .from('video_lectures')
+        .from('Coaching-3_VideoLectures')
         .select('*')
         .or(`student_class.eq.${userClass},student_class.eq.All`)
         .order('created_at', { ascending: false });
@@ -85,7 +85,7 @@ export default function StudyMaterialSection({ userClass, onTotalCount, onSubjec
 
     const { data: urlData } = await supabase
       .storage
-      .from("coaching-2_private")
+      .from("coaching-3_private")
       .createSignedUrl(filePath, 300);
 
     if (urlData?.signedUrl) {

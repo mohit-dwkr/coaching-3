@@ -49,7 +49,7 @@ export default function ToppersSection() {
     queryKey: ["toppers", page],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("Coaching-2_Toppers")
+        .from("Coaching-3_Toppers")
         .select("id, name, image_url, percentage, student_class, batch_year")
         .order("created_at", { ascending: false })
         .range(page * 8, page * 8 + 7);

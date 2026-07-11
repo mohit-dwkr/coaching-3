@@ -47,7 +47,7 @@ const { data = [] } = useQuery<FacultyType[]>({
   queryKey: ["faculty", page],
   queryFn: async () => {
     const { data, error } = await supabase
-      .from("Coaching-2_Faculty")
+      .from("Coaching-3_Faculty")
       .select("id, name, subject, experience_years, image_url")
       .order("created_at", { ascending: false })
       .range(page * 4, page * 4 + 3);

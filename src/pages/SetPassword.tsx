@@ -91,7 +91,7 @@ const {
 
 if (user) {
   await supabase
-    .from("admins")
+    .from("Coaching-3_Admins")
     .update({
       status: "active",
     })
