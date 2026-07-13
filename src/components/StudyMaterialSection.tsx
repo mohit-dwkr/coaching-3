@@ -9,11 +9,17 @@ import { toast } from "sonner"
 // 1. Interface definition
 interface StudyMaterialProps {
   userClass: string;
+  notesAccess?: boolean;
   onTotalCount?: (count: number) => void;
   onSubjectCount?: (count: number) => void;
 }
 
-export default function StudyMaterialSection({ userClass, onTotalCount, onSubjectCount }: StudyMaterialProps) {
+export default function StudyMaterialSection({
+  userClass,
+  notesAccess,
+  onTotalCount,
+  onSubjectCount,
+}: StudyMaterialProps) {
 
   // ✅ States jo UI toggle ke liye chahiye
   const [selectedSubject, setSelectedSubject] = useState("");
@@ -60,6 +66,7 @@ export default function StudyMaterialSection({ userClass, onTotalCount, onSubjec
   const materials = allContent?.materials || [];
   const videos = allContent?.videos || [];
 
+
   useEffect(() => {
     // Agar materials load ho chuke hain (cache se ya fetch se) 
     // aur abhi koi subject selected nahi hai (mtlb user just tab switch karke aaya hai)
@@ -68,6 +75,31 @@ export default function StudyMaterialSection({ userClass, onTotalCount, onSubjec
       setSelectedSubject(firstSub);
     }
   }, [materials, selectedSubject]);
+
+
+if (notesAccess === false) {
+  return (
+    <div className="min-h-[500px] flex items-center justify-center">
+      <div className="max-w-lg w-full bg-white border border-red-100 rounded-3xl p-10 text-center shadow-sm">
+
+        <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-red-50 flex items-center justify-center">
+          <FileText className="text-red-500" size={30} />
+        </div>
+
+        <h2 className="text-2xl font-black text-slate-900">
+          Study Material Locked
+        </h2>
+
+        <p className="text-slate-500 mt-3 leading-relaxed">
+          Your study material access has been disabled by your coaching institute.
+          Please contact the administration for more information.
+        </p>
+
+      </div>
+    </div>
+  );
+}
+
 
   const handleSubjectChange = (sub: string) => {
     setSelectedSubject(sub);

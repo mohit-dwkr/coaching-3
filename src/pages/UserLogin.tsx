@@ -42,28 +42,38 @@ export default function UserLogin() {
 
         const userId = session.user.id;
 
-        const { data: profile } = await supabase
-          .from("Coaching-3_StudentApprovals")
-          .select("status")
-          .eq("user_id", userId)
-          .maybeSingle();
+        // First check permanent student record
+const { data: student } = await supabase
+  .from("Coaching-3_Students")
+  .select("status, notes_access")
+  .eq("user_id", userId)
+  .maybeSingle();
 
-        // No profile -> logout
-        if (!profile) {
-          await supabase.auth.signOut();
-          setCheckingSession(false);
-          return;
-        }
+if (student) {
+  window.location.replace("/dashboard");
+  return;
+}
 
-        // Denied user -> logout
-        if (profile.status === "denied") {
-          await supabase.auth.signOut();
-          setCheckingSession(false);
-          return;
-        }
+// Otherwise check approval request
+const { data: profile } = await supabase
+  .from("Coaching-3_StudentApprovals")
+  .select("status")
+  .eq("user_id", userId)
+  .maybeSingle();
 
-        // Approved/Pending -> dashboard
-        window.location.replace("/dashboard");
+if (!profile) {
+  await supabase.auth.signOut();
+  setCheckingSession(false);
+  return;
+}
+
+if (profile.status === "denied") {
+  await supabase.auth.signOut();
+  setCheckingSession(false);
+  return;
+}
+
+window.location.replace("/dashboard");
       } catch (error) {
         console.error(error);
         setCheckingSession(false);

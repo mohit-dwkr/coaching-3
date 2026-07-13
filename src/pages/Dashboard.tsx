@@ -92,6 +92,20 @@ export default function Dashboard() {
         const userId = session.user.id;
 
         // FETCH PROFILE
+
+        const {
+          data: studentData,
+          error: studentError,
+        } = await supabase
+          .from("Coaching-3_Students")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (studentError) {
+          throw studentError;
+        }
+
         const {
           data: profileData,
           error: profileError,
@@ -133,9 +147,26 @@ export default function Dashboard() {
 
         // VALID USER
         if (mounted) {
-          setProfile(profileData);
+
+          setProfile({
+
+            ...profileData,
+
+            student_id: studentData?.student_id,
+
+            batch: studentData?.batch,
+
+            notes_access: studentData?.notes_access,
+
+            student_status: studentData?.status,
+
+          });
+
           setStatus(profileData.status);
+
         }
+
+
       } catch (err: any) {
         console.error(
           "Dashboard Init Error:",
@@ -161,78 +192,121 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-    if (!profile?.user_id) return;
+  if (!profile?.user_id) return;
 
-    const channel = supabase
-      .channel("student-approval-realtime")
+  const channel = supabase
+    .channel("student-approval-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "Coaching-3_StudentApprovals",
+        filter: `user_id=eq.${profile.user_id}`,
+      },
+      async (payload) => {
+        console.log("Realtime Approval Update:", payload);
 
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "Coaching-3_StudentApprovals",
-          filter: `user_id=eq.${profile.user_id}`,
-        },
+        const updatedProfile = payload.new;
 
-        async (payload) => {
-          console.log(
-            "Realtime profile update:",
-            payload
-          );
+        const previousStatus = status;
+        const newStatus = updatedProfile.status;
 
-          const updatedProfile = payload.new;
+        // Update only approval related data
+        setProfile((prev: any) => ({
+          ...prev,
+          name: updatedProfile.name,
+          email: updatedProfile.email,
+          mobile: updatedProfile.mobile,
+          class: updatedProfile.class,
+          status: updatedProfile.status,
+        }));
 
-          const previousStatus = status;
-          const newStatus = payload.new.status;
+        setStatus(newStatus);
 
-          // Update state instantly
-          setProfile((prev: any) => ({
-            ...prev,
-            ...updatedProfile,
-          }));
-
-          setStatus(newStatus);
-
-          // ✅ APPROVED
-          if (
-            previousStatus !== "approved" &&
-            newStatus === "approved"
-          ) {
-            toast.success(
-              "Your account has been approved!"
-            );
-          }
-
-          // ✅ DENIED
-          if (
-            previousStatus !== "denied" &&
-            newStatus === "denied"
-          ) {
-            toast.error(
-              "Your access has been denied."
-            );
-
-
-            await supabase.auth.signOut();
-
-            window.location.replace("/userlogin");
-          }
+        // Student Approved
+        if (
+          previousStatus !== "approved" &&
+          newStatus === "approved"
+        ) {
+          toast.success("Your account has been approved!");
         }
-      )
 
-      .subscribe((status) => {
+        // Student Rejected
+        if (
+          previousStatus !== "denied" &&
+          newStatus === "denied"
+        ) {
+          toast.error("Your access has been denied.");
+
+          await supabase.auth.signOut();
+
+          window.location.replace("/userlogin");
+        }
+      }
+    )
+    .subscribe((subscriptionStatus) => {
+      console.log(
+        "Approval Realtime:",
+        subscriptionStatus
+      );
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [profile?.user_id, status]);
+
+
+ useEffect(() => {
+  if (!profile?.user_id) return;
+
+  const studentChannel = supabase
+    .channel("student-profile-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "Coaching-3_Students",
+        filter: `user_id=eq.${profile.user_id}`,
+      },
+      (payload) => {
         console.log(
-          "Realtime subscription status:",
-          status
+          "Student Profile Updated:",
+          payload
         );
-      });
 
-    // Cleanup
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profile?.user_id]);
+        const student = payload.new;
+
+        setProfile((prev: any) => ({
+          ...prev,
+
+          // Student Table Fields
+          student_id: student.student_id,
+          batch: student.batch,
+          notes_access: student.notes_access,
+          student_status: student.status,
+
+          // Profile Fields
+          name: student.name,
+          email: student.email,
+          mobile: student.mobile,
+          class: student.class,
+        }));
+      }
+    )
+    .subscribe((subscriptionStatus) => {
+      console.log(
+        "Student Realtime:",
+        subscriptionStatus
+      );
+    });
+
+  return () => {
+    supabase.removeChannel(studentChannel);
+  };
+}, [profile?.user_id]);
 
 
   // ✅ PROFILE UPDATE
@@ -244,11 +318,7 @@ export default function Dashboard() {
       return toast.error("Name too short");
     }
 
-    if (
-      !/^[0-9]{10}$/.test(
-        editData.mobile.trim()
-      )
-    ) {
+    if (!/^[0-9]{10}$/.test(editData.mobile.trim())) {
       return toast.error("Enter valid mobile number");
     }
 
@@ -266,13 +336,31 @@ export default function Dashboard() {
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
+      // ✅ Update StudentApprovals
+      const { error: approvalError } = await supabase
         .from("Coaching-3_StudentApprovals")
         .update(updatedPayload)
         .eq("user_id", profile.user_id);
 
-      if (error) throw error;
+      if (approvalError) throw approvalError;
 
+      // ✅ Update Students Table
+      const { error: studentError } = await supabase
+        .from("Coaching-3_Students")
+        .update({
+          name: updatedPayload.name,
+          mobile: updatedPayload.mobile,
+          class: updatedPayload.class,
+          updated_at: updatedPayload.updated_at,
+        })
+        .eq("user_id", profile.user_id);
+
+      // Agar student table me row na ho (pending student), to ignore karo
+      if (studentError) {
+        console.log(studentError);
+      }
+
+      // ✅ Update Local State
       setProfile((prev: any) => ({
         ...prev,
         ...updatedPayload,
@@ -281,12 +369,12 @@ export default function Dashboard() {
       setIsEditing(false);
 
       toast.success("Profile updated successfully!");
+
     } catch (error: any) {
       console.error(error);
 
       toast.error(
-        error?.message ||
-        "Failed to update profile."
+        error?.message || "Failed to update profile."
       );
     } finally {
       setSaving(false);
@@ -319,6 +407,11 @@ export default function Dashboard() {
     );
   }
 
+  const studentId =
+    profile?.student_id || "Not Assigned";
+
+  const batch =
+    profile?.batch || "Not Assigned";
 
   // Google Image Logic
   const userAvatar = profile?.user_id ? `https://lh3.googleusercontent.com/d/${profile.user_id}` : null;
@@ -385,8 +478,8 @@ export default function Dashboard() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-3 p-4 rounded-2xl text-sm font-bold transition-all ${activeTab === tab.id
-                    ? "bg-blue-700 text-white shadow-md shadow-slate-200"
-                    : "text-white"
+                  ? "bg-blue-700 text-white shadow-md shadow-slate-200"
+                  : "text-white"
                   }`}
               >
                 <tab.icon size={18} />
@@ -487,8 +580,8 @@ export default function Dashboard() {
                         setIsSidebarOpen(false);
                       }}
                       className={`w-full flex items-center gap-3 p-4 rounded-2xl text-sm font-bold transition-all ${activeTab === tab.id
-                          ? "bg-blue-700 text-white shadow-md shadow-slate-200"
-                          : "text-white "
+                        ? "bg-blue-700 text-white shadow-md shadow-slate-200"
+                        : "text-white "
                         }`}
                     >
                       <tab.icon size={18} />
@@ -569,7 +662,12 @@ export default function Dashboard() {
               </motion.div>
             ) : (
               <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                {activeTab === "study" && <StudyMaterialSection userClass={profile?.class || ""} onTotalCount={setTotalNotes} onSubjectCount={setCurrentSubNotes} />}
+                {activeTab === "study" && <StudyMaterialSection
+                  userClass={profile?.class || ""}
+                  notesAccess={profile?.notes_access}
+                  onTotalCount={setTotalNotes}
+                  onSubjectCount={setCurrentSubNotes}
+                />}
                 {activeTab === "notifications" && <NotificationSection profile={profile} />}
                 {activeTab === "payment" && <Payment />}
               </motion.div>
@@ -615,7 +713,7 @@ export default function Dashboard() {
                     {/* Yahan change hai: isEditing true ho AUR field email NA ho, tabhi input dikhao */}
                     {isEditing && field.key !== "email" ? (
                       <input
-                       type={field.key === "class" ? "number" : "text"}
+                        type={field.key === "class" ? "number" : "text"}
                         value={editData[field.key as keyof typeof editData]}
                         onChange={(e) => setEditData({ ...editData, [field.key]: e.target.value })}
                         className="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:ring-2 ring-blue-100"
@@ -628,6 +726,26 @@ export default function Dashboard() {
                     )}
                   </div>
                 ))}
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4 border">
+                <p className="text-xs text-slate-500 uppercase">
+                  Student ID
+                </p>
+
+                <p className="font-bold">
+                  {studentId}
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4 border">
+                <p className="text-xs text-slate-500 uppercase">
+                  Batch
+                </p>
+
+                <p className="font-bold">
+                  {batch}
+                </p>
               </div>
 
               {/* Bottom Action Buttons */}

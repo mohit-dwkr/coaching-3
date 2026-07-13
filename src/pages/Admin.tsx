@@ -14,7 +14,7 @@ import {
   LogOut,
   Bell
 } from "lucide-react";
-import {toast} from "sonner"
+import { toast } from "sonner"
 
 import { supabase } from "@/supabaseClient";
 import BatchManager from "@/components/admin/BatchManager";
@@ -31,16 +31,17 @@ import AdminDrawer from "@/components/admin/AdminDrawer";
 import { motion, AnimatePresence } from "framer-motion";
 
 const tabs = [
+  { id: "students", label: "Students Manager", icon: AppWindow },
   { id: "Hero", label: "Hero Manager", icon: AppWindow },
   { id: "batches", label: "Batch Manager", icon: BookOpen },
   { id: "faculty", label: "Faculty Manager", icon: User },
   { id: "toppers", label: "Toppers Manager", icon: Trophy },
   { id: "gallery", label: "Gallery Manager", icon: Image },
   { id: "inbox", label: "Student Inquiries", icon: Inbox },
-  { id: "students", label: "Students Manager", icon: AppWindow },
-  { id: "material", label: "Study Material Manager", icon: FileText },
-  { id: "videos", label: "Videos Manager", icon: AppWindow },
   { id: "notification", label: "Notification Manager", icon: Bell },
+  { id: "videos", label: "Videos Manager", icon: AppWindow },
+  { id: "material", label: "Study Material Manager", icon: FileText },
+
 ] as const;
 
 type Tab = (typeof tabs)[number]["id"];
@@ -69,7 +70,7 @@ const panels: Record<Tab, React.FC> = {
 };
 
 export default function Admin() {
-  const [active, setActive] = useState<Tab>("Hero");
+  const [active, setActive] = useState<Tab>("students");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -144,102 +145,102 @@ export default function Admin() {
   };
 
   // ✅ Invite Admin
-const handleInvite = async (
-  email: string,
-  role: AdminRole
-) => {
-  try {
+  const handleInvite = async (
+    email: string,
+    role: AdminRole
+  ) => {
+    try {
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    const response = await fetch(
-      "https://pqsauuhrabzjsfpqcsqf.supabase.co/functions/v1/invite-admin",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({
-          email,
-          role,
-        }),
+      const response = await fetch(
+        "https://pqsauuhrabzjsfpqcsqf.supabase.co/functions/v1/invite-admin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            email,
+            role,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(result.error || "Failed to invite admin");
+        return;
       }
-    );
 
-    const result = await response.json();
+      await fetchAdmins();
 
-    if (!response.ok) {
-      toast.error(result.error || "Failed to invite admin");
-      return;
+      toast.success("Invite sent successfully");
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to invite admin");
     }
-
-    await fetchAdmins();
-
-    toast.success("Invite sent successfully");
-
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to invite admin");
-  }
-};
+  };
 
   // ✅ Delete Admin
- // ✅ Delete Admin
-const handleDelete = async (id: string) => {
-  try {
+  // ✅ Delete Admin
+  const handleDelete = async (id: string) => {
+    try {
 
-    const adminToDelete = admins.find(
-      (admin) => admin.id === id
-    );
-
-    if (!adminToDelete) return;
-
-    // ❌ Prevent deleting owner
-    if (adminToDelete.role === "owner") {
-      toast.error("Owner cannot be deleted");
-      return;
-    }
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const response = await fetch(
-      "https://pqsauuhrabzjsfpqcsqf.supabase.co/functions/v1/delete-admin",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({
-          adminId: id,
-        }),
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      toast.error(
-        result.error ||
-          "Failed to delete admin"
+      const adminToDelete = admins.find(
+        (admin) => admin.id === id
       );
-      return;
+
+      if (!adminToDelete) return;
+
+      // ❌ Prevent deleting owner
+      if (adminToDelete.role === "owner") {
+        toast.error("Owner cannot be deleted");
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const response = await fetch(
+        "https://pqsauuhrabzjsfpqcsqf.supabase.co/functions/v1/delete-admin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            adminId: id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(
+          result.error ||
+          "Failed to delete admin"
+        );
+        return;
+      }
+
+      await fetchAdmins();
+
+      toast.success("Admin deleted successfully");
+
+    } catch (err) {
+      console.error(err);
+      toast.success("Failed to delete admin");
     }
-
-    await fetchAdmins();
-
-    toast.success("Admin deleted successfully");
-
-  } catch (err) {
-    console.error(err);
-    toast.success("Failed to delete admin");
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -297,11 +298,10 @@ const handleDelete = async (id: string) => {
               <button
                 key={t.id}
                 onClick={() => handleTabChange(t.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition ${
-                  IsActive
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition ${IsActive
                     ? "bg-primary text-white"
                     : "text-slate-600 hover:bg-slate-100"
-                }`}
+                  }`}
               >
                 <t.icon className="h-5 w-5" />
                 {t.label}
