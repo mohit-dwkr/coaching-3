@@ -8,14 +8,14 @@ import { toast } from "sonner"
 
 // 1. Interface definition
 interface StudyMaterialProps {
-  userClass: string;
+  courseId: string;
   notesAccess?: boolean;
   onTotalCount?: (count: number) => void;
   onSubjectCount?: (count: number) => void;
 }
 
 export default function StudyMaterialSection({
-  userClass,
+  courseId,
   notesAccess,
   onTotalCount,
   onSubjectCount,
@@ -32,21 +32,21 @@ export default function StudyMaterialSection({
 
   // ✅ REACT QUERY: Data fetch aur Cache ek saath
   const { data: allContent, isLoading } = useQuery({
-    queryKey: ["study-materials", userClass],
+    queryKey: ["study-materials", courseId],
     queryFn: async () => {
+
       // 1. PDF Materials Fetching
       const { data: matData } = await supabase
         .from("Coaching-3_StudyMaterial")
         .select("*")
-        .eq("student_class", userClass)
+        .eq("course_id", courseId)
         .order("created_at", { ascending: false });
 
       // 2. Video Fetching
       const { data: vidData } = await supabase
         .from('Coaching-3_VideoLectures')
         .select('*')
-        .or(`student_class.eq.${userClass},student_class.eq.All`)
-        .order('created_at', { ascending: false });
+        .eq("course_id", courseId);
 
       // Dashboard counts logic
       if (matData) {
@@ -65,7 +65,24 @@ export default function StudyMaterialSection({
 
   const materials = allContent?.materials || [];
   const videos = allContent?.videos || [];
+  const [selectedVideoSubject, setSelectedVideoSubject] = useState("");
 
+
+  const videoSubjects = [...new Set(videos.map(v => v.subject))];
+
+  const filteredVideos =
+    selectedVideoSubject === ""
+      ? videos
+      : videos.filter(v => v.subject === selectedVideoSubject);
+
+  const totalVideoPages = Math.ceil(
+    filteredVideos.length / itemsPerPageVideo
+  );
+
+  const currentVideos = filteredVideos.slice(
+    (videoPage - 1) * itemsPerPageVideo,
+    videoPage * itemsPerPageVideo
+  );
 
   useEffect(() => {
     // Agar materials load ho chuke hain (cache se ya fetch se) 
@@ -77,28 +94,28 @@ export default function StudyMaterialSection({
   }, [materials, selectedSubject]);
 
 
-if (notesAccess === false) {
-  return (
-    <div className="min-h-[500px] flex items-center justify-center">
-      <div className="max-w-lg w-full bg-white border border-red-100 rounded-3xl p-10 text-center shadow-sm">
+  if (notesAccess === false) {
+    return (
+      <div className="min-h-[500px] flex items-center justify-center">
+        <div className="max-w-lg w-full bg-white border border-red-100 rounded-3xl p-10 text-center shadow-sm">
 
-        <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-red-50 flex items-center justify-center">
-          <FileText className="text-red-500" size={30} />
+          <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-red-50 flex items-center justify-center">
+            <FileText className="text-red-500" size={30} />
+          </div>
+
+          <h2 className="text-2xl font-black text-slate-900">
+            Study Material Locked
+          </h2>
+
+          <p className="text-slate-500 mt-3 leading-relaxed">
+            Your study material access has been disabled by your coaching institute.
+            Please contact the administration for more information.
+          </p>
+
         </div>
-
-        <h2 className="text-2xl font-black text-slate-900">
-          Study Material Locked
-        </h2>
-
-        <p className="text-slate-500 mt-3 leading-relaxed">
-          Your study material access has been disabled by your coaching institute.
-          Please contact the administration for more information.
-        </p>
-
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 
   const handleSubjectChange = (sub: string) => {
@@ -128,16 +145,12 @@ if (notesAccess === false) {
   };
 
   // ✅ Filter logic
-  const subjectsForClass = [...new Set(materials.map((m) => m.subject))] as string[];
+  const subjectsForCourse = [...new Set(materials.map((m) => m.subject))];
   const filteredMaterials = materials.filter(m => m.subject === selectedSubject);
 
   // ✅ PDF Pagination Calculations
   const totalPdfPages = Math.ceil(filteredMaterials.length / itemsPerPagePdf);
   const currentPdfs = filteredMaterials.slice((pdfPage - 1) * itemsPerPagePdf, pdfPage * itemsPerPagePdf);
-
-  // ✅ Video Pagination Calculations
-  const totalVideoPages = Math.ceil(videos.length / itemsPerPageVideo);
-  const currentVideos = videos.slice((videoPage - 1) * itemsPerPageVideo, videoPage * itemsPerPageVideo);
 
   if (isLoading)
     return (
@@ -161,13 +174,13 @@ if (notesAccess === false) {
             <div className="max-w-4xl mx-auto px-4 pb-20">
 
               {/* Subject Selection - Sirf tab dikhega jab subjects honge */}
-              {userClass && subjectsForClass.length > 0 && (
+              {subjectsForCourse.length > 0 && (
                 <div className="mb-12 text-center">
                   <p className="text-[10px] font-bold text-slate-600 uppercase mb-4 tracking-widest">
-                    Select Subject for Class {userClass}
+                    Choose Subject
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    {subjectsForClass.map((s: string) => (
+                    {subjectsForCourse.map((s: string) => (
                       <button
                         key={s}
                         onClick={() => handleSubjectChange(s)}
@@ -194,7 +207,9 @@ if (notesAccess === false) {
                           </div>
                           <div className="flex-1 text-left">
                             <p className="font-extrabold text-slate-800">{m.title}</p>
-                            <p className="text-sm text-gray-800">{m.subject} <span className="text-sm text-gray-500">• Class {m.student_class}</span> </p>
+                            <p className="text-sm text-gray-600">
+                              {m.subject}
+                            </p>
                           </div>
                         </div>
                         <Button className="w-full md:w-auto" onClick={() => handleDownload(m.file_url)}>
@@ -204,11 +219,12 @@ if (notesAccess === false) {
                     ))
                   ) : (
                     <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200">
-                      <p className="text-slate-500 font-medium">No notes available for your class yet.</p>
+                      <p className="text-slate-500 font-medium">No study material available for your course yet.</p>
                     </div>
                   )}
                 </AnimatePresence>
               </div>
+
 
               {/* PDF Pagination Controls */}
               {totalPdfPages > 1 && (
@@ -240,6 +256,48 @@ if (notesAccess === false) {
           <div className="container mx-auto px-6 max-w-7xl">
             <h2 className="text-3xl md:text-5xl font-black text-center mb-12">Video <span className="text-blue-700">Lectures</span> </h2>
 
+
+            {/* Video Subject Tabs */}
+            {videoSubjects.length > 0 && (
+              <div className="mb-10 text-center">
+                <p className="text-[10px] font-bold text-slate-600 uppercase mb-4 tracking-widest">
+                  Choose Subject
+                </p>
+
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedVideoSubject("");
+                      setVideoPage(1);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${selectedVideoSubject === ""
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-100 text-slate-600"
+                      }`}
+                  >
+                    All Subjects
+                  </button>
+
+                  {videoSubjects.map((subject: string) => (
+                    <button
+                      key={subject}
+                      onClick={() => {
+                        setSelectedVideoSubject(subject);
+                        setVideoPage(1);
+                      }}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${selectedVideoSubject === subject
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-100 text-slate-600"
+                        }`}
+                    >
+                      {subject}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {currentVideos.length > 0 ? (
                 currentVideos.map((vid) => (
@@ -256,7 +314,7 @@ if (notesAccess === false) {
               ) : (
                 /* Empty state: Isko col-span-full diya hai taaki ye poori width le sake bina layout bigade */
                 <div className="col-span-full text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
-                  <p className="text-slate-500 font-bold">No video lectures available for your class yet.</p>
+                  <p className="text-slate-500 font-bold">No video lectures available for your course yet.</p>
                 </div>
               )}
             </div>

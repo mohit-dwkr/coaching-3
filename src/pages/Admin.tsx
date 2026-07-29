@@ -29,9 +29,13 @@ import StudentManager from "@/components/admin/StudentManager";
 import NotificationSectionManager from "@/components/admin/NotificationSectionManager";
 import AdminDrawer from "@/components/admin/AdminDrawer";
 import { motion, AnimatePresence } from "framer-motion";
+import FeesManager from "@/components/admin/fees/FeesManager"
+import AttendanceSection from "@/components/admin/attendance/AttendanceManager";
 
 const tabs = [
   { id: "students", label: "Students Manager", icon: AppWindow },
+  { id: "fees", label: "Fees Manager", icon: AppWindow },
+  { id: "attendance", label: "Attendance Manager", icon: FileText },
   { id: "Hero", label: "Hero Manager", icon: AppWindow },
   { id: "batches", label: "Batch Manager", icon: BookOpen },
   { id: "faculty", label: "Faculty Manager", icon: User },
@@ -66,10 +70,12 @@ const panels: Record<Tab, React.FC> = {
   Hero: HeroManager,
   videos: VideosManager,
   students: StudentManager,
-  notification: NotificationSectionManager
+  notification: NotificationSectionManager,
+  fees: FeesManager,
+  attendance: AttendanceSection,
 };
 
-export default function Admin() {
+export default function Admin() {     
   const [active, setActive] = useState<Tab>("students");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);

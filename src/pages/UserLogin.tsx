@@ -18,9 +18,9 @@ export default function UserLogin() {
     name: "",
     email: "",
     mobile: "",
-    class: "",
+    course_id: "",
   });
-
+  const [courses, setCourses] = useState<any[]>([]);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -43,37 +43,37 @@ export default function UserLogin() {
         const userId = session.user.id;
 
         // First check permanent student record
-const { data: student } = await supabase
-  .from("Coaching-3_Students")
-  .select("status, notes_access")
-  .eq("user_id", userId)
-  .maybeSingle();
+        const { data: student } = await supabase
+          .from("Coaching-3_Students")
+          .select("status, notes_access")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-if (student) {
-  window.location.replace("/dashboard");
-  return;
-}
+        if (student) {
+          window.location.replace("/dashboard");
+          return;
+        }
 
-// Otherwise check approval request
-const { data: profile } = await supabase
-  .from("Coaching-3_StudentApprovals")
-  .select("status")
-  .eq("user_id", userId)
-  .maybeSingle();
+        // Otherwise check approval request
+        const { data: profile } = await supabase
+          .from("Coaching-3_StudentApprovals")
+          .select("status")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-if (!profile) {
-  await supabase.auth.signOut();
-  setCheckingSession(false);
-  return;
-}
+        if (!profile) {
+          await supabase.auth.signOut();
+          setCheckingSession(false);
+          return;
+        }
 
-if (profile.status === "denied") {
-  await supabase.auth.signOut();
-  setCheckingSession(false);
-  return;
-}
+        if (profile.status === "denied") {
+          await supabase.auth.signOut();
+          setCheckingSession(false);
+          return;
+        }
 
-window.location.replace("/dashboard");
+        window.location.replace("/dashboard");
       } catch (error) {
         console.error(error);
         setCheckingSession(false);
@@ -82,6 +82,24 @@ window.location.replace("/dashboard");
 
     checkSession();
   }, []);
+
+
+  const fetchCourses = async () => {
+    const { data, error } = await supabase
+      .from("Coaching-3_Courses")
+      .select("*")
+      .eq("status", "active")
+      .order("course_name");
+
+    if (!error && data) {
+      setCourses(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
 
   // ✅ SEND OTP
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -92,28 +110,23 @@ window.location.replace("/dashboard");
     const email = form.email.trim().toLowerCase();
     const name = form.name.trim();
     const mobile = form.mobile.trim();
-    const studentClass = form.class.trim();
+    const selectedCourse = form.course_id;
 
-    // Validation
-   if (!/\S+@\S+\.\S+/.test(email)) {
-  toast.error("Enter valid email");
-  return;
-}
+    if (!selectedCourse) {
+      toast.error("Please select course");
+      return;
+    }
 
-if (name.length < 3) {
-  toast.error("Name is too short");
-  return;
-}
+    if (name.length < 3) {
+      toast.error("Name is too short");
+      return;
+    }
 
-if (!/^[0-9]{10}$/.test(mobile)) {
-  toast.error("Enter valid 10 digit mobile number");
-  return;
-}
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      toast.error("Enter valid 10 digit mobile number");
+      return;
+    }
 
-if (!studentClass) {
-  toast.error("Enter class");
-  return;
-}
 
     setLoading(true);
 
@@ -126,7 +139,7 @@ if (!studentClass) {
           data: {
             name,
             mobile,
-            student_class: studentClass,
+            course_id: selectedCourse,
           },
 
           emailRedirectTo:
@@ -182,7 +195,91 @@ if (!studentClass) {
 
       const userId = user.id;
 
-      // ✅ FETCH EXISTING PROFILE
+      // ============================
+      // CHECK EXISTING STUDENT
+      // ============================
+
+      const {
+        data: existingStudent,
+        error: studentError,
+      } = await supabase
+        .from("Coaching-3_Students")
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (studentError) throw studentError;
+
+      if (existingStudent) {
+
+        // Link auth user with student
+        if (!existingStudent.user_id) {
+
+          const { error: linkError } = await supabase
+            .from("Coaching-3_Students")
+            .update({
+              user_id: userId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingStudent.id);
+
+          if (linkError) throw linkError;
+
+        }
+
+        // Check approval profile using email
+        const {
+          data: approvalProfile,
+          error: approvalError,
+        } = await supabase
+          .from("Coaching-3_StudentApprovals")
+          .select("*")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (approvalError) throw approvalError;
+
+        // Manual admission student
+        if (!approvalProfile) {
+
+          const { error: insertApprovalError } =
+            await supabase
+              .from("Coaching-3_StudentApprovals")
+              .insert({
+                user_id: userId,
+                name: existingStudent.name,
+                email: existingStudent.email,
+                mobile: existingStudent.mobile,
+                course_id: existingStudent.course_id,
+                status: "approved",
+                updated_at: new Date().toISOString(),
+              });
+
+          if (insertApprovalError)
+            throw insertApprovalError;
+
+        }
+
+        // Existing profile but user_id missing
+        else if (!approvalProfile.user_id) {
+
+          const { error: updateApprovalError } =
+            await supabase
+              .from("Coaching-3_StudentApprovals")
+              .update({
+                user_id: userId,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", approvalProfile.id);
+
+          if (updateApprovalError)
+            throw updateApprovalError;
+        }
+        window.location.replace("/dashboard");
+        return;
+      }
+
+
       const {
         data: existingProfile,
         error: fetchError,
@@ -204,10 +301,10 @@ if (!studentClass) {
               name: form.name.trim(),
               email,
               mobile: form.mobile.trim(),
-              class: form.class.trim(),
+              course_id: form.course_id,
               status: "pending",
             },
-          ]);
+          ])
 
         if (insertError) throw insertError;
       }
@@ -219,7 +316,7 @@ if (!studentClass) {
           .update({
             name: form.name.trim(),
             mobile: form.mobile.trim(),
-            class: form.class.trim(),
+            course_id: form.course_id,
             status: "pending",
             updated_at: new Date().toISOString(),
           })
@@ -314,10 +411,39 @@ if (!studentClass) {
                     <input placeholder="Mobile Number" required value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} className="login-input w-full pl-12 pr-4 h-14 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-1 focus:ring-blue-600 outline-none transition-all font-medium" />
                   </div>
 
+
                   <div className="relative group">
-                    <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
-                    <input type="number" placeholder="Class (e.g. 10)" required value={form.class} onChange={(e) => setForm({ ...form, class: e.target.value })} className="login-input w-full pl-12 pr-4 h-14 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-1 focus:ring-blue-600 outline-none transition-all font-medium" />
+                    <GraduationCap
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10"
+                      size={18}
+                    />
+
+                    <select
+                      required
+                      value={form.course_id}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          course_id: e.target.value,
+                        })
+                      }
+                      className="w-full pl-12 pr-4 h-14 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-1 focus:ring-blue-600 outline-none transition-all font-medium appearance-none"
+                    >
+                      <option value="">
+                        Select Course
+                      </option>
+
+                      {courses.map((course) => (
+                        <option
+                          key={course.id}
+                          value={course.id}
+                        >
+                          {course.course_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
 
                   <button type="submit" disabled={loading} className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-black text-lg shadow-xl shadow-blue-100 transition-all flex items-center justify-center gap-2 mt-4 active:scale-95">
                     {loading ? <Loader2 className="animate-spin" /> : <>Get OTP <ArrowRight size={20} /></>}

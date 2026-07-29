@@ -21,6 +21,9 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Dashboard() {
+
+  const [courses, setCourses] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   const [status, setStatus] = useState<string | null>(null);
@@ -46,7 +49,7 @@ export default function Dashboard() {
     name: "",
     email: "",
     mobile: "",
-    class: "",
+    course: "",
   });
 
   // Notes Count
@@ -64,7 +67,8 @@ export default function Dashboard() {
       name: profile.name || "",
       email: profile.email || "",
       mobile: profile.mobile || "",
-      class: profile.class || "",
+      course:
+        profile.course?.course_name || "",
     });
   }, [profile]);
 
@@ -90,7 +94,7 @@ export default function Dashboard() {
         }
 
         const userId = session.user.id;
-
+        await fetchCourses();
         // FETCH PROFILE
 
         const {
@@ -192,121 +196,137 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-  if (!profile?.user_id) return;
+    if (!profile?.user_id) return;
 
-  const channel = supabase
-    .channel("student-approval-realtime")
-    .on(
-      "postgres_changes",
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "Coaching-3_StudentApprovals",
-        filter: `user_id=eq.${profile.user_id}`,
-      },
-      async (payload) => {
-        console.log("Realtime Approval Update:", payload);
+    const channel = supabase
+      .channel("student-approval-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "Coaching-3_StudentApprovals",
+          filter: `user_id=eq.${profile.user_id}`,
+        },
+        async (payload) => {
+          console.log("Realtime Approval Update:", payload);
 
-        const updatedProfile = payload.new;
+          const updatedProfile = payload.new;
 
-        const previousStatus = status;
-        const newStatus = updatedProfile.status;
+          const previousStatus = status;
+          const newStatus = updatedProfile.status;
 
-        // Update only approval related data
-        setProfile((prev: any) => ({
-          ...prev,
-          name: updatedProfile.name,
-          email: updatedProfile.email,
-          mobile: updatedProfile.mobile,
-          class: updatedProfile.class,
-          status: updatedProfile.status,
-        }));
+          // Update only approval related data
+          setProfile((prev: any) => ({
+            ...prev,
+            name: updatedProfile.name,
+            email: updatedProfile.email,
+            mobile: updatedProfile.mobile,
+            class: updatedProfile.class,
+            status: updatedProfile.status,
+          }));
 
-        setStatus(newStatus);
+          setStatus(newStatus);
 
-        // Student Approved
-        if (
-          previousStatus !== "approved" &&
-          newStatus === "approved"
-        ) {
-          toast.success("Your account has been approved!");
+          // Student Approved
+          if (
+            previousStatus !== "approved" &&
+            newStatus === "approved"
+          ) {
+            toast.success("Your account has been approved!");
+          }
+
+          // Student Rejected
+          if (
+            previousStatus !== "denied" &&
+            newStatus === "denied"
+          ) {
+            toast.error("Your access has been denied.");
+
+            await supabase.auth.signOut();
+
+            window.location.replace("/userlogin");
+          }
         }
-
-        // Student Rejected
-        if (
-          previousStatus !== "denied" &&
-          newStatus === "denied"
-        ) {
-          toast.error("Your access has been denied.");
-
-          await supabase.auth.signOut();
-
-          window.location.replace("/userlogin");
-        }
-      }
-    )
-    .subscribe((subscriptionStatus) => {
-      console.log(
-        "Approval Realtime:",
-        subscriptionStatus
-      );
-    });
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [profile?.user_id, status]);
-
-
- useEffect(() => {
-  if (!profile?.user_id) return;
-
-  const studentChannel = supabase
-    .channel("student-profile-realtime")
-    .on(
-      "postgres_changes",
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "Coaching-3_Students",
-        filter: `user_id=eq.${profile.user_id}`,
-      },
-      (payload) => {
+      )
+      .subscribe((subscriptionStatus) => {
         console.log(
-          "Student Profile Updated:",
-          payload
+          "Approval Realtime:",
+          subscriptionStatus
         );
+      });
 
-        const student = payload.new;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.user_id, status]);
 
-        setProfile((prev: any) => ({
-          ...prev,
 
-          // Student Table Fields
-          student_id: student.student_id,
-          batch: student.batch,
-          notes_access: student.notes_access,
-          student_status: student.status,
+  useEffect(() => {
+    if (!profile?.user_id) return;
 
-          // Profile Fields
-          name: student.name,
-          email: student.email,
-          mobile: student.mobile,
-          class: student.class,
-        }));
-      }
-    )
-    .subscribe((subscriptionStatus) => {
-      console.log(
-        "Student Realtime:",
-        subscriptionStatus
-      );
-    });
+    const studentChannel = supabase
+      .channel("student-profile-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "Coaching-3_Students",
+          filter: `user_id=eq.${profile.user_id}`,
+        },
+        (payload) => {
+          console.log(
+            "Student Profile Updated:",
+            payload
+          );
 
-  return () => {
-    supabase.removeChannel(studentChannel);
+          const student = payload.new;
+
+          setProfile((prev: any) => ({
+            ...prev,
+
+            // Student Table Fields
+            student_id: student.student_id,
+            batch: student.batch,
+            notes_access: student.notes_access,
+            student_status: student.status,
+
+            // Profile Fields
+            name: student.name,
+            email: student.email,
+            mobile: student.mobile,
+            course: student.course?.course_name || "",
+          }));
+        }
+      )
+      .subscribe((subscriptionStatus) => {
+        console.log(
+          "Student Realtime:",
+          subscriptionStatus
+        );
+      });
+
+    return () => {
+      supabase.removeChannel(studentChannel);
+    };
+  }, [profile?.user_id]);
+
+
+  const fetchCourses = async () => {
+
+    const { data, error } = await supabase
+      .from("Coaching-3_Courses")
+      .select("id, course_name")
+      .eq("status", "active")
+      .order("course_name");
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+    setCourses(data || []);
   };
-}, [profile?.user_id]);
 
 
   // ✅ PROFILE UPDATE
@@ -322,8 +342,8 @@ export default function Dashboard() {
       return toast.error("Enter valid mobile number");
     }
 
-    if (!editData.class.trim()) {
-      return toast.error("Enter class");
+    if (!editData.course.trim()) {
+      return toast.error("Select course");
     }
 
     setSaving(true);
@@ -332,7 +352,11 @@ export default function Dashboard() {
       const updatedPayload = {
         name: editData.name.trim(),
         mobile: editData.mobile.trim(),
-        class: editData.class.trim(),
+
+        course_id: null,
+        batch_id: null,
+        batch: "Not Assigned",
+
         updated_at: new Date().toISOString(),
       };
 
@@ -350,7 +374,7 @@ export default function Dashboard() {
         .update({
           name: updatedPayload.name,
           mobile: updatedPayload.mobile,
-          class: updatedPayload.class,
+          // class: updatedPayload.class,
           updated_at: updatedPayload.updated_at,
         })
         .eq("user_id", profile.user_id);
@@ -663,7 +687,7 @@ export default function Dashboard() {
             ) : (
               <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 {activeTab === "study" && <StudyMaterialSection
-                  userClass={profile?.class || ""}
+                  courseId={profile?.course_id || ""}
                   notesAccess={profile?.notes_access}
                   onTotalCount={setTotalNotes}
                   onSubjectCount={setCurrentSubNotes}
