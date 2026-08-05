@@ -1,3 +1,4 @@
+import { Calculator } from "lucide-react";
 import { StudentFeeData } from "../types";
 import { PaymentFormData } from "../types";
 
@@ -39,110 +40,100 @@ export default function PaymentPreview({
   const newValidity = studentFee.next_due_date;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-5">
+  <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 space-y-4 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700">
+    
+    {/* Section Title Header */}
+    <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/60">
+      <div className="flex items-center gap-2">
+        <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+          <Calculator className="h-4 w-4" />
+        </div>
+        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Payment Preview
+        </h3>
+      </div>
+      <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md">
+        Calculated Live
+      </span>
+    </div>
 
-      <h3 className="text-base font-semibold">
-        Payment Preview
-      </h3>
+    {/* Calculation Breakdown Area */}
+    <div className="space-y-3.5 pt-1">
 
-      <div className="space-y-4">
-
-        {/* Paid */}
-
-        <div className="flex justify-between items-center">
-
-          <span className="text-slate-500">
+      {/* SECTION 1: PAID BREAKDOWN */}
+      <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800 space-y-2">
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-slate-500 dark:text-slate-400 font-medium">
             Current Paid
           </span>
-
-          <span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">
             {formatCurrency(studentFee.paid_amount)}
           </span>
-
         </div>
 
-        <div className="flex justify-between items-center">
-
-          <span className="text-slate-500">
-            Payment
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-slate-500 dark:text-slate-400 font-medium">
+            New Payment
           </span>
-
-          <span className="font-medium text-blue-600">
+          <span className="font-bold text-blue-600 dark:text-blue-400">
             + {formatCurrency(payment)}
           </span>
-
         </div>
 
-        <div className="flex justify-between items-center border-t pt-3">
-
-          <span className="font-semibold">
-            New Paid
+        <div className="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-800 pt-2 text-xs">
+          <span className="font-bold text-slate-900 dark:text-slate-100">
+            New Total Paid
           </span>
-
-          <span className="font-bold text-green-600">
+          <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
             {formatCurrency(newPaid)}
           </span>
-
         </div>
+      </div>
 
-        <hr />
-
-        {/* Remaining */}
-
-        <div className="flex justify-between items-center">
-
-          <span className="text-slate-500">
+      {/* SECTION 2: REMAINING BALANCE */}
+      <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800 space-y-2">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-slate-500 dark:text-slate-400 font-medium">
             Current Remaining
           </span>
-
-          <span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">
             {formatCurrency(studentFee.remaining_amount)}
           </span>
-
         </div>
 
-        <div className="flex justify-between items-center">
-
-          <span className="font-semibold">
-            New Remaining
+        <div className="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-800 pt-2 text-xs">
+          <span className="font-bold text-slate-900 dark:text-slate-100">
+            New Remaining Balance
           </span>
-
-          <span className="font-bold text-red-600">
+          <span className="font-black text-rose-600 dark:text-rose-400 text-sm">
             {formatCurrency(newRemaining)}
           </span>
-
         </div>
+      </div>
 
-        <hr />
-
-        {/* Validity */}
-
-        <div className="flex justify-between items-center">
-
-          <span className="text-slate-500">
+      {/* SECTION 3: VALIDITY DATE EXTENSION */}
+      <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800 space-y-2">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-slate-500 dark:text-slate-400 font-medium">
             Current Valid Till
           </span>
-
-          <span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">
             {formatDate(studentFee.next_due_date)}
           </span>
-
         </div>
 
-        <div className="flex justify-between items-center">
-
-          <span className="font-semibold">
+        <div className="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-800 pt-2 text-xs">
+          <span className="font-bold text-slate-900 dark:text-slate-100">
             New Valid Till
           </span>
-
-          <span className="font-bold">
+          <span className="font-black text-slate-900 dark:text-slate-100 text-sm">
             {formatDate(newValidity)}
           </span>
-
         </div>
-
       </div>
 
     </div>
-  );
+
+  </div>
+);
 }

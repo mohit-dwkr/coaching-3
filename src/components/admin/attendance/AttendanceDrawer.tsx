@@ -500,315 +500,272 @@ export default function AttendanceDrawer({
     const totalStudents = students.length;
 
 
-    return (
-        <>
-            {isOpen && (
-                <div className="fixed inset-0 z-50">
+   return (
+    <>
+        {isOpen && (
+            <div className="fixed inset-0 z-50 overflow-hidden">
+                {/* Backdrop Overlay with smooth blur */}
+                <div
+                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
+                    onClick={onClose}
+                />
 
-                    {/* Overlay */}
-                    <div
-                        className="absolute inset-0 bg-black/50"
-                        onClick={onClose}
-                    />
-
-                    {/* Drawer */}
-                    <div className="absolute right-0 top-0 h-full w-full max-w-3xl bg-white shadow-xl flex flex-col">
+                <div className="fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-10">
+                    {/* Drawer Panel - Responsive Widths */}
+                    <div className="w-screen max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white shadow-2xl flex flex-col transform transition-all duration-300 ease-in-out">
 
                         {/* Header */}
-                        <div className="flex items-center justify-between border-b px-6 py-4">
+                        <div className="flex items-center justify-between border-b border-gray-100 px-4 sm:px-6 py-4 bg-gray-50/50">
                             <div>
-                                <h2 className="text-xl font-semibold">
-
-                                    {sessionLocked
-                                        ? "View Attendance"
-                                        : "Take Attendance"}
-
+                                <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
+                                    {sessionLocked ? "View Attendance" : "Take Attendance"}
                                 </h2>
-                                <p className="text-sm text-gray-500 mt-1">
-
+                                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
                                     {sessionLocked
-                                        ? "Attendance is locked"
-                                        : "Mark attendance for selected batch"}
-
+                                        ? "Attendance records are locked for this session"
+                                        : "Mark and review daily student attendance"}
                                 </p>
                             </div>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={onClose}
+                                className="rounded-full hover:bg-gray-200/60 text-gray-500 transition-colors"
                             >
                                 <X className="h-5 w-5" />
                             </Button>
                         </div>
 
-
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-6">
-
-                            <div className="rounded-lg border p-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <GraduationCap className="h-5 w-5 text-blue-600" />
-                                        <div>
-                                            <p className="text-xs text-gray-500">
-                                                Course
-                                            </p>
-                                            <p className="font-medium">
-                                                {courseName || "-"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Users className="h-5 w-5 text-green-600" />
-                                        <div>
-                                            <p className="text-xs text-gray-500">
-                                                Batch
-                                            </p>
-                                            <p className="font-medium">
-                                                {batchName || "-"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Calendar className="h-5 w-5 text-orange-600" />
-                                        <div>
-                                            <p className="text-xs text-gray-500">
-                                                Date
-                                            </p>
-                                            <p className="font-medium">
-                                                {selectedDate}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Users className="h-5 w-5 text-purple-600" />
-                                        <div>
-                                            <p className="text-xs text-gray-500">
-                                                Students
-                                            </p>
-                                            <p className="font-medium">
-                                                {totalStudents}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div className="mt-6">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by name or roll number..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="w-full rounded-lg border pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                        </div>
-
-
-                        <div className="grid grid-cols-4 gap-4 mt-6">
-                            <div className="rounded-lg border p-4">
-                                <p className="text-sm text-gray-500">
-                                    Total
-                                </p>
-                                <p className="text-2xl font-bold">
-                                    {totalStudents}
-                                </p>
-                            </div>
-                            <div className="rounded-lg border p-4">
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                                    <p className="text-sm text-gray-500">
-                                        Present
-                                    </p>
-                                </div>
-                                <p className="text-2xl font-bold text-green-600 mt-2">
-                                    {presentCount}
-                                </p>
-                            </div>
-                            <div className="rounded-lg border p-4">
-                                <div className="flex items-center gap-2">
-                                    <XCircle className="h-5 w-5 text-red-600" />
-                                    <p className="text-sm text-gray-500">
-                                        Absent
-                                    </p>
-                                </div>
-                                <p className="text-2xl font-bold text-red-600 mt-2">
-                                    {absentCount}
-                                </p>
-                            </div>
-                            <div className="rounded-lg border p-4">
-                                <div className="flex items-center gap-2">
-                                    <Clock3 className="h-5 w-5 text-yellow-600" />
-                                    <p className="text-sm text-gray-500">
-                                        Leave
-                                    </p>
-                                </div>
-                                <p className="text-2xl font-bold text-yellow-600 mt-2">
-                                    {leaveCount}
-                                </p>
-                            </div>
-                        </div>
-
-
-
+                        {/* Lock Warning Banner */}
                         {sessionLocked && (
-                            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                                <p className="font-medium text-red-700">
-                                    🔒 This attendance is locked.
-                                </p>
-                                <p className="text-sm text-red-600 mt-1">
-
-                                    You can view attendance, but editing is disabled.
-                                </p>
+                            <div className="mx-4 sm:mx-6 mt-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-3 sm:p-4 flex items-center gap-3 text-amber-900 shadow-sm">
+                                <div className="p-2 rounded-lg bg-amber-100 text-amber-700 shrink-0">
+                                    🔒
+                                </div>
+                                <div className="text-xs sm:text-sm">
+                                    <p className="font-semibold text-amber-800">Attendance Locked</p>
+                                    <p className="text-amber-700/90 mt-0.5">Editing is disabled for this session. You are currently in view-only mode.</p>
+                                </div>
                             </div>
                         )}
 
-                        {/* =========================
-    STUDENTS LIST
-========================= */}
+                        {/* Main Content Scrollable Area */}
+                        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-6">
 
-                        <div className="mt-6 flex-1 overflow-y-auto">
-                            {loading ? (
-                                <div className="flex justify-center py-12">
-                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                                </div>
-                            ) : filteredStudents.length === 0 ? (
-                                <div className="rounded-lg border border-dashed p-10 text-center text-gray-500">
-                                    No students found in this batch.
-                                </div>
+                            {/* Batch & Course Info Grid */}
+                            <div className="rounded-2xl bg-slate-50/70 border border-slate-100 p-4 sm:p-5">
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shrink-0">
+                                            <GraduationCap className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Course</p>
+                                            <p className="font-semibold text-gray-800 text-xs sm:text-sm truncate">{courseName || "-"}</p>
+                                        </div>
+                                    </div>
 
-                            ) : (
-                                <div className="space-y-3">
-                                    {filteredStudents.map((student) => (
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0">
+                                            <Users className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Batch</p>
+                                            <p className="font-semibold text-gray-800 text-xs sm:text-sm truncate">{batchName || "-"}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 rounded-xl bg-orange-50 text-orange-600 shrink-0">
+                                            <Calendar className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Date</p>
+                                            <p className="font-semibold text-gray-800 text-xs sm:text-sm truncate">{selectedDate}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 shrink-0">
+                                            <Users className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Students</p>
+                                            <p className="font-semibold text-gray-800 text-xs sm:text-sm truncate">{totalStudents}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Attendance Analytics / Stats */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div className="rounded-xl border border-gray-100 bg-white p-3 sm:p-4 shadow-sm">
+                                    <p className="text-xs font-medium text-gray-500">Total</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{totalStudents}</p>
+                                </div>
+                                <div className="rounded-xl border border-emerald-100 bg-emerald-50/30 p-3 sm:p-4 shadow-sm">
+                                    <div className="flex items-center gap-1.5 text-emerald-600">
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        <p className="text-xs font-semibold">Present</p>
+                                    </div>
+                                    <p className="text-xl sm:text-2xl font-bold text-emerald-600 mt-1">{presentCount}</p>
+                                </div>
+                                <div className="rounded-xl border border-rose-100 bg-rose-50/30 p-3 sm:p-4 shadow-sm">
+                                    <div className="flex items-center gap-1.5 text-rose-600">
+                                        <XCircle className="h-4 w-4" />
+                                        <p className="text-xs font-semibold">Absent</p>
+                                    </div>
+                                    <p className="text-xl sm:text-2xl font-bold text-rose-600 mt-1">{absentCount}</p>
+                                </div>
+                                <div className="rounded-xl border border-amber-100 bg-amber-50/30 p-3 sm:p-4 shadow-sm">
+                                    <div className="flex items-center gap-1.5 text-amber-600">
+                                        <Clock3 className="h-4 w-4" />
+                                        <p className="text-xs font-semibold">Leave</p>
+                                    </div>
+                                    <p className="text-xl sm:text-2xl font-bold text-amber-600 mt-1">{leaveCount}</p>
+                                </div>
+                            </div>
+
+                            {/* Search Input Box */}
+                            <div className="relative">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search student by name or roll number..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-10 pr-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                />
+                            </div>
+
+                            {/* Students List Section */}
+                            <div className="space-y-3 pt-2">
+                                {loading ? (
+                                    <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
+                                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                        <p className="text-sm font-medium">Fetching students list...</p>
+                                    </div>
+                                ) : filteredStudents.length === 0 ? (
+                                    <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center">
+                                        <p className="text-base font-semibold text-gray-700">No Students Found</p>
+                                        <p className="text-xs text-gray-400 mt-1">Try adjusting your search filter or check batch assignments.</p>
+                                    </div>
+                                ) : (
+                                    filteredStudents.map((student) => (
                                         <div
                                             key={student.id}
-                                            className="rounded-lg border bg-white p-4"
+                                            className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:border-gray-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-sm text-gray-500">
-                                                        Roll No.
-                                                    </p>
-                                                    <p className="font-semibold">
-                                                        {student.roll_number ?? "-"}
-                                                    </p>
-                                                    <p className="mt-1 text-lg font-medium">
-                                                        {student.name}
-                                                    </p>
+                                            {/* Student Details */}
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm shrink-0 border border-slate-200/60">
+                                                    {student.name ? student.name.charAt(0).toUpperCase() : "S"}
                                                 </div>
-                                                <div className="flex items-center gap-6">
-
-                                                    {/* Present */}
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                        <input
-                                                            type="radio"
-                                                            name={`attendance-${student.id}`}
-                                                            checked={
-                                                                student.attendanceStatus === "present"
-                                                            }
-                                                            disabled={sessionLocked}
-                                                            onChange={() =>
-                                                                updateAttendanceStatus(
-                                                                    student.id,
-                                                                    "present"
-                                                                )
-                                                            }
-                                                        />
-                                                        <span className="text-green-600 font-medium">
-                                                            Present
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                                            {student.name}
+                                                        </h4>
+                                                        <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 shrink-0">
+                                                            Roll: {student.roll_number ?? "-"}
                                                         </span>
-                                                    </label>
-
-                                                    {/* Absent */}
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                        <input
-                                                            type="radio"
-                                                            name={`attendance-${student.id}`}
-                                                            checked={
-                                                                student.attendanceStatus === "absent"
-                                                            }
-                                                            disabled={sessionLocked}
-                                                            onChange={() =>
-                                                                updateAttendanceStatus(
-                                                                    student.id,
-                                                                    "absent"
-                                                                )
-                                                            }
-                                                        />
-                                                        <span className="text-red-600 font-medium">
-                                                            Absent
-                                                        </span>
-                                                    </label>
-
-                                                    {/* Leave */}
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-
-                                                        <input
-                                                            type="radio"
-                                                            name={`attendance-${student.id}`}
-                                                            checked={
-                                                                student.attendanceStatus === "leave"
-                                                            }
-                                                            disabled={sessionLocked}
-                                                            onChange={() =>
-                                                                updateAttendanceStatus(
-                                                                    student.id,
-                                                                    "leave"
-                                                                )
-                                                            }
-                                                        />
-                                                        <span className="text-yellow-600 font-medium">
-                                                            Leave
-                                                        </span>
-                                                    </label>
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            {/* Radio Button Options */}
+                                            <div className="flex items-center gap-1 sm:gap-2 self-start sm:self-auto bg-gray-50/80 p-1 rounded-xl border border-gray-100 w-full sm:w-auto justify-between sm:justify-start">
+                                                
+                                                {/* Present Choice */}
+                                                <label className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                                                    student.attendanceStatus === "present"
+                                                        ? "bg-emerald-500 text-white shadow-sm"
+                                                        : "text-gray-600 hover:text-emerald-600 hover:bg-emerald-50/50"
+                                                } ${sessionLocked ? "opacity-60 cursor-not-allowed" : ""}`}>
+                                                    <input
+                                                        type="radio"
+                                                        className="hidden"
+                                                        name={`attendance-${student.id}`}
+                                                        checked={student.attendanceStatus === "present"}
+                                                        disabled={sessionLocked}
+                                                        onChange={() => updateAttendanceStatus(student.id, "present")}
+                                                    />
+                                                    <span>Present</span>
+                                                </label>
+
+                                                {/* Absent Choice */}
+                                                <label className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                                                    student.attendanceStatus === "absent"
+                                                        ? "bg-rose-500 text-white shadow-sm"
+                                                        : "text-gray-600 hover:text-rose-600 hover:bg-rose-50/50"
+                                                } ${sessionLocked ? "opacity-60 cursor-not-allowed" : ""}`}>
+                                                    <input
+                                                        type="radio"
+                                                        className="hidden"
+                                                        name={`attendance-${student.id}`}
+                                                        checked={student.attendanceStatus === "absent"}
+                                                        disabled={sessionLocked}
+                                                        onChange={() => updateAttendanceStatus(student.id, "absent")}
+                                                    />
+                                                    <span>Absent</span>
+                                                </label>
+
+                                                {/* Leave Choice */}
+                                                <label className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                                                    student.attendanceStatus === "leave"
+                                                        ? "bg-amber-500 text-white shadow-sm"
+                                                        : "text-gray-600 hover:text-amber-600 hover:bg-amber-50/50"
+                                                } ${sessionLocked ? "opacity-60 cursor-not-allowed" : ""}`}>
+                                                    <input
+                                                        type="radio"
+                                                        className="hidden"
+                                                        name={`attendance-${student.id}`}
+                                                        checked={student.attendanceStatus === "leave"}
+                                                        disabled={sessionLocked}
+                                                        onChange={() => updateAttendanceStatus(student.id, "leave")}
+                                                    />
+                                                    <span>Leave</span>
+                                                </label>
+
+                                            </div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
+                                    ))
+                                )}
+                            </div>
                         </div>
 
-
-
-                        {/* footer */}
-                        <div className="border-t px-6 py-4 flex justify-end gap-3">
+                        {/* Drawer Footer */}
+                        <div className="border-t border-gray-100 bg-white px-4 sm:px-6 py-4 flex items-center justify-end gap-3 shadow-lg">
                             <Button
                                 variant="outline"
                                 onClick={onClose}
+                                className="rounded-xl px-5 border-gray-200 hover:bg-gray-50 text-gray-700 font-medium text-xs sm:text-sm"
                             >
                                 Cancel
                             </Button>
 
-                            
                             <Button
                                 onClick={saveAttendance}
                                 disabled={saving || sessionLocked}
+                                className="rounded-xl px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-blue-500/20 disabled:opacity-50 transition-all"
                             >
-                                {sessionLocked
-                                    ? "Attendance Locked"
-                                    : saving
-                                        ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Saving...
-                                            </>
-                                        )
-                                        : "Save Attendance"}
+                                {sessionLocked ? (
+                                    "Attendance Locked"
+                                ) : saving ? (
+                                    <div className="flex items-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <span>Saving Changes...</span>
+                                    </div>
+                                ) : (
+                                    "Save Attendance"
+                                )}
                             </Button>
                         </div>
 
-
-
                     </div>
                 </div>
-            )}
-        </>
-
-    )
-};
+            </div>
+        )}
+    </>
+);
+}

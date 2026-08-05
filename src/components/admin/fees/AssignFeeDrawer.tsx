@@ -13,6 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { AlertCircle, CheckCircle2, Receipt, X } from "lucide-react";
 
 interface AssignFeeDrawerProps {
     isOpen: boolean;
@@ -185,242 +186,311 @@ export default function AssignFeeDrawer({
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[80] bg-black/50 flex justify-end">
+   return (
+    <>
+      {/* Backdrop Blur Overlay with Fade Transition */}
+      <div
+        className={`fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-100" // transition control
+        }`}
+        onClick={onClose}
+      />
 
-            <div className="w-full max-w-md bg-white h-screen overflow-y-auto p-6">
+      {/* Main Drawer Panel */}
+      <div className="fixed inset-y-0 right-0 z-[90] w-full max-w-md bg-slate-50 text-slate-900 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200">
+        
+        {/* Modern Sticky Header */}
+        <div className="flex items-center justify-between px-6 py-5 bg-white border-b border-slate-200/80 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${assignedFee ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"}`}>
+              <Receipt size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
+                {assignedFee ? "Fee Details" : "Assign Fee"}
+              </h2>
+              <p className="text-xs text-slate-400 font-medium">
+                {assignedFee ? "Active Student Allocation" : "Set up student fee structure"}
+              </p>
+            </div>
+          </div>
 
-                <h2 className="text-2xl font-bold mb-6">
-                    {assignedFee ? "✅ Fee Assigned" : "Assign Fee"}
-                </h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all border border-transparent hover:border-slate-200"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-                {!assignedFee ? (
-                    <div className="space-y-4">
-                        <div>
-                            <Label>Student</Label>
-                            <Input
-                                value={student?.name || ""}
-                                disabled
-                            />
-                        </div>
-                        <div>
-                            <Label>Course</Label>
-                            <Input
-                                value={student?.course?.course_name || ""}
-                                disabled
-                            />
-                        </div>
-                        <div>
-                            <Label>Batch</Label>
-                            <Input
-                                value={
-                                    student?.batch_relation?.batch_name ||
-                                    "Not Assigned"
-                                }
-                                disabled
-                            />
-                        </div>
-                        <div>
-                            <Label>Fee Structure</Label>
-                            <select
-                                className="w-full border rounded-lg p-2"
-                                value={selectedStructure}
-                                onChange={(e) => setSelectedStructure(e.target.value)}
-                            >
-                                <option value="">
-                                    Select Fee Structure
-                                </option>
-                                {feeStructures.map((fee) => (
-                                    <option
-                                        key={fee.id}
-                                        value={fee.id}
-                                    >
-                                        ₹ {fee.total_fee} • {fee.duration_months} Months
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <Label>Discount</Label>
-                            <Input
-                                type="number"
-                                value={discount}
-                                onChange={(e) => {
-                                    const value = Number(e.target.value);
-                                    if (value > grandTotal) {
-                                        toast.error(
-                                            "Discount cannot be greater than Grand Total."
-                                        );
+        {/* Scrollable Content Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+          {!assignedFee ? (
+            <div className="space-y-5">
+              
+              {/* Readonly Info Section */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">
+                      Student
+                    </Label>
+                    <Input
+                      value={student?.name || ""}
+                      disabled
+                      className="bg-slate-50 border-slate-200 font-semibold text-slate-800 disabled:opacity-100 rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">
+                      Course
+                    </Label>
+                    <Input
+                      value={student?.course?.course_name || ""}
+                      disabled
+                      className="bg-slate-50 border-slate-200 font-semibold text-slate-800 disabled:opacity-100 rounded-xl"
+                    />
+                  </div>
+                </div>
 
-                                        return;
-                                    }
-                                    setDiscount(value);
-                                }}
-                            />
-                        </div>
-                        <div className="rounded-xl border border-slate-200 p-5 space-y-3">
-                            <h3 className="font-semibold text-slate-800">
-                                Fee Details
-                            </h3>
-                            <div className="flex justify-between">
-                                <span>Course Fee</span>
-                                <span>
-                                    ₹ {Number(selectedFee?.total_fee || 0).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Admission Fee</span>
-                                <span>
-                                    ₹ {Number(selectedFee?.admission_fee || 0).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Registration Fee</span>
-                                <span>
-                                    ₹ {Number(selectedFee?.registration_fee || 0).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Duration</span>
-                                <span>
-                                    {selectedFee?.duration_months || 0} Months
-                                </span>
-                            </div>
-                            <hr />
-                            <div className="flex justify-between font-semibold">
-                                <span>Total Course Fee</span>
-                                <span>
-                                    ₹ {grandTotal.toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Discount</span>
-                                <span>
-                                    ₹ {discount.toLocaleString()}
-                                </span>
-                            </div>
+                <div>
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">
+                    Batch
+                  </Label>
+                  <Input
+                    value={
+                      student?.batch_relation?.batch_name || "Not Assigned"
+                    }
+                    disabled
+                    className="bg-slate-50 border-slate-200 font-semibold text-slate-800 disabled:opacity-100 rounded-xl"
+                  />
+                </div>
+              </div>
 
-                            <hr />
+              {/* Fee Selection Inputs */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                <div>
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">
+                    Select Fee Structure
+                  </Label>
+                  <select
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-sm font-semibold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer"
+                    value={selectedStructure}
+                    onChange={(e) => setSelectedStructure(e.target.value)}
+                  >
+                    <option value="">Choose a structure...</option>
+                    {feeStructures.map((fee) => (
+                      <option key={fee.id} value={fee.id}>
+                        ₹ {fee.total_fee} • {fee.duration_months} Months Duration
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                            <div className="flex justify-between text-lg font-bold text-green-700">
-                                <span>Final Payable Fee</span>
-                                <span>
-                                    ₹ {finalFee.toLocaleString()}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex gap-3 pt-4">
-                            <Button
-                                variant="outline"
-                                className="w-full"
-                                onClick={onClose}
-                            >
-                                Cancel
-                            </Button>
+                <div>
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">
+                    Discount Amount (₹)
+                  </Label>
+                  <Input
+                    type="number"
+                    placeholder="Enter discount if applicable"
+                    value={discount}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (value > grandTotal) {
+                        toast.error(
+                          "Discount cannot be greater than Grand Total."
+                        );
+                        return;
+                      }
+                      setDiscount(value);
+                    }}
+                    className="rounded-xl border-slate-200 font-semibold text-slate-900 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
 
-                            <Button
-                                className="w-full"
-                                onClick={handleAssignFee}
-                            >
-                                Assign Fee
-                            </Button>
-                        </div>
-                    </div>
-                ) : (
+              {/* Dynamic Fee Breakdown Box */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3.5">
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2.5">
+                  Fee Calculations
+                </h3>
 
+                <div className="space-y-2.5 text-sm font-medium text-slate-600">
+                  <div className="flex justify-between">
+                    <span>Course Fee</span>
+                    <span className="font-semibold text-slate-900">
+                      ₹ {Number(selectedFee?.total_fee || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Admission Fee</span>
+                    <span className="font-semibold text-slate-900">
+                      ₹ {Number(selectedFee?.admission_fee || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Registration Fee</span>
+                    <span className="font-semibold text-slate-900">
+                      ₹ {Number(selectedFee?.registration_fee || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Duration</span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedFee?.duration_months || 0} Months
+                    </span>
+                  </div>
 
-                    <div className="space-y-5">
-                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-                            <h3 className="text-lg font-bold text-emerald-700">
-                                ✅ Fee Already Assigned
-                            </h3>
-                            <p className="text-sm text-slate-600 mt-2">
-                                This student's fee has already been assigned.
-                                You can view the assigned fee details below.
-                            </p>
-                        </div>
-                        <div className="rounded-xl border border-slate-200 p-5 space-y-3">
-                            <div className="flex justify-between">
-                                <span>Status</span>
-                                <span className="px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
-                                    {assignedFee.status}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Course Fee</span>
-                                <span>
-                                    ₹ {Number(assignedFee.course_fee).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Admission Fee</span>
-                                <span>
-                                    ₹ {Number(assignedFee.admission_fee).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Registration Fee</span>
-                                <span>
-                                    ₹ {Number(assignedFee.registration_fee).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Discount</span>
-                                <span>
-                                    ₹ {Number(assignedFee.discount).toLocaleString()}
-                                </span>
-                            </div>
+                  <div className="pt-2 border-t border-slate-100 flex justify-between font-bold text-slate-800">
+                    <span>Total Base Fee</span>
+                    <span>₹ {grandTotal.toLocaleString()}</span>
+                  </div>
 
-                            <div className="flex justify-between">
-                                <span>Duration</span>
-                                <span>
-                                    {assignedFee.duration_months} Months
-                                </span>
-                            </div>
+                  <div className="flex justify-between text-rose-600">
+                    <span>Discount (-)</span>
+                    <span className="font-semibold">₹ {discount.toLocaleString()}</span>
+                  </div>
+                </div>
 
-                            <div className="flex justify-between">
-                                <span>Remaining</span>
-                                <span className="font-semibold text-red-600">
-                                    ₹ {Number(assignedFee.remaining_amount).toLocaleString()}
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between">
-                                <span>Paid</span>
-                                <span className="font-semibold text-green-600">
-                                    ₹ {Number(assignedFee.paid_amount).toLocaleString()}
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between">
-                                <span>Assigned On</span>
-                                <span>
-                                    {new Date(assignedFee.created_at).toLocaleDateString()}
-                                </span>
-                            </div>
-
-                            <hr />
-
-                            <div className="flex justify-between font-bold text-lg">
-                                <span>Final Fee</span>
-                                <span>
-                                    ₹ {Number(assignedFee.final_fee).toLocaleString()}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                            <p className="text-sm text-blue-700">
-                                Fee has already been assigned.
-                                Future payments and fee updates can be managed from the Fees Manager.
-                            </p>
-                        </div>
-
-                    </div>
-                )}
-
+                {/* Final Highlighted Total */}
+                <div className="pt-3 border-t border-dashed border-slate-200 flex justify-between items-center text-lg font-black text-emerald-600">
+                  <span>Final Payable</span>
+                  <span className="text-xl bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200/60">
+                    ₹ {finalFee.toLocaleString()}
+                  </span>
+                </div>
+              </div>
 
             </div>
+          ) : (
+            /* Fee Already Assigned State View */
+            <div className="space-y-5">
+              
+              {/* Success Badge Banner */}
+              <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-teal-50/30 p-5 shadow-sm">
+                <div className="flex items-center gap-2.5 text-emerald-700 font-extrabold text-base">
+                  <CheckCircle2 size={20} />
+                  <span>Fee Assigned & Active</span>
+                </div>
+                <p className="text-xs font-medium text-emerald-800/80 mt-1.5 leading-relaxed">
+                  This student has an assigned fee record. You can check the current payment balance and details below.
+                </p>
+              </div>
+
+              {/* Status & Allocation Card */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3.5">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Status</span>
+                  <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 text-xs font-black uppercase tracking-wider">
+                    {assignedFee.status}
+                  </span>
+                </div>
+
+                <div className="space-y-2.5 text-sm font-medium text-slate-600">
+                  <div className="flex justify-between">
+                    <span>Course Fee</span>
+                    <span className="font-semibold text-slate-900">
+                      ₹ {Number(assignedFee.course_fee).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Admission Fee</span>
+                    <span className="font-semibold text-slate-900">
+                      ₹ {Number(assignedFee.admission_fee).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Registration Fee</span>
+                    <span className="font-semibold text-slate-900">
+                      ₹ {Number(assignedFee.registration_fee).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-rose-600">
+                    <span>Discount</span>
+                    <span className="font-semibold">
+                      ₹ {Number(assignedFee.discount).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Duration</span>
+                    <span className="font-semibold text-slate-900">
+                      {assignedFee.duration_months} Months
+                    </span>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-slate-100 flex justify-between">
+                    <span className="font-semibold text-slate-700">Remaining Due</span>
+                    <span className="font-extrabold text-rose-600">
+                      ₹ {Number(assignedFee.remaining_amount).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-700">Paid Amount</span>
+                    <span className="font-extrabold text-emerald-600">
+                      ₹ {Number(assignedFee.paid_amount).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between text-xs text-slate-400 pt-1">
+                    <span>Assigned On</span>
+                    <span className="font-medium">
+                      {new Date(assignedFee.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-dashed border-slate-200 flex justify-between items-center text-lg font-black text-slate-900">
+                  <span>Final Fee</span>
+                  <span className="text-xl">
+                    ₹ {Number(assignedFee.final_fee).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Info Note Box */}
+              <div className="rounded-2xl border border-blue-200/80 bg-blue-50/50 p-4 flex gap-3 items-start">
+                <AlertCircle size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-800/80 leading-relaxed font-medium">
+                  Future payments, receipts, and installment updates can be easily managed from the **Fees Manager** section.
+                </p>
+              </div>
+
+            </div>
+          )}
         </div>
-    );
+
+        {/* Fixed Modern Action Footer */}
+        <div className="p-5 bg-white border-t border-slate-200/80 shrink-0">
+          {!assignedFee ? (
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="w-1/2 h-11 rounded-xl font-bold border-slate-200 hover:bg-slate-100 text-slate-700 transition-all"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                className="w-1/2 h-11 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all"
+                onClick={handleAssignFee}
+              >
+                Assign Fee
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={onClose}
+              className="w-full h-11 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white active:scale-[0.98] transition-all"
+            >
+              Close Window
+            </Button>
+          )}
+        </div>
+
+      </div>
+    </>
+  );
 }

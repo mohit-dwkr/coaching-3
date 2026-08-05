@@ -99,370 +99,292 @@ export default function ExportFeesModal({
 
     if (!open) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-
-            <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-xl">
-
-                {/* Header */}
-
-                <div className="flex justify-between items-center">
-
-                    <div>
-
-                        <h2 className="text-2xl font-black">
-                            Export Fees Report
-                        </h2>
-
-                        <p className="text-slate-500 text-sm mt-1">
-                            Choose the report you want to export.
-                        </p>
-
-                    </div>
-
-                    <button onClick={onClose}>
-                        <X />
-                    </button>
-
-                </div>
-
-                {/* Report Type */}
-
-                <div className="mt-8">
-
-                    <label className="text-xs font-bold uppercase text-slate-500">
-
-                        Report Type
-
-                    </label>
-
-                    <select
-                        value={reportType}
-                        onChange={(e) =>
-                            setReportType(e.target.value)
-                        }
-                        className="w-full mt-2 border rounded-xl p-3"
-                    >
-
-                        <option value="current">
-                            Current View
-                        </option>
-
-                        <option value="complete">
-                            Complete Report
-                        </option>
-
-                        <option value="course">
-                            Course Report
-                        </option>
-
-                        <option value="batch">
-                            Batch Report
-                        </option>
-
-                        <option value="pending">
-                            Pending Fees
-                        </option>
-
-                        <option value="paid">
-                            Paid Students
-                        </option>
-
-                        <option value="collection">
-                            Collection Report
-                        </option>
-
-                        <option value="history">
-                            Payment History
-                        </option>
-
-                    </select>
-
-                </div>
-
-                {/* Course */}
-
-                {(reportType === "course" ||
-                    reportType === "batch" ||
-                    reportType === "paid" ||
-                    reportType === "collection" ||
-                    reportType === "history") && (
-
-                        <div className="mt-6">
-
-                            <label className="text-xs font-bold uppercase text-slate-500">
-
-                                Select Course
-
-                            </label>
-                            <select
-                                value={selectedCourse}
-                                onChange={(e) => {
-
-                                    const value = e.target.value;
-
-                                    setSelectedCourse(value);
-
-                                    setSelectedBatch("all");
-
-                                    setSelectedStudent("all");
-
-                                }}
-                                className="w-full mt-2 border rounded-xl p-3"
-                            >
-
-                                <option value="all">
-
-                                    All Course
-
-                                </option>
-
-                                {courses.map((course) => (
-
-                                    <option
-                                        key={course.id}
-                                        value={course.id}
-                                    >
-                                        {course.course_name}
-                                    </option>
-
-                                ))}
-                            </select>
-                        </div>
-                    )}
-
-
-                {/* Batch */}
-
-                {(
-                    reportType === "batch" ||
-                    reportType === "paid" ||
-                    reportType === "collection" ||
-                    reportType === "history"
-                ) && (
-
-                        <div className="mt-6">
-
-                            <label className="text-xs font-bold uppercase text-slate-500">
-
-                                Select Batch
-
-                            </label>
-
-                            <select
-                                value={selectedBatch}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setSelectedBatch(value);
-                                    setSelectedStudent("all");
-                                }}
-                                disabled={selectedCourse === "all"}
-                                className={`w-full mt-2 border rounded-xl p-3 ${selectedCourse === "all"
-                                    ? "bg-slate-100 cursor-not-allowed"
-                                    : ""
-                                    }`}
-                            >
-
-                                <option value="all">
-                                    {selectedCourse === "all"
-                                        ? "All Batches"
-                                        : "All Batches"}
-                                </option>
-                                {filteredBatches.map((batch) => (
-                                    <option
-                                        key={batch.id}
-                                        value={batch.id}
-                                    >
-                                        {batch.batch_name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-
-
-
-                {showDateFilter && (
-                    <div className="mt-6 grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-bold uppercase text-slate-500">
-                                From Date
-                            </label>
-                            <input
-                                type="date"
-                                value={fromDate}
-                                onChange={(e) =>
-                                    setFromDate(e.target.value)
-                                }
-                                className="w-full mt-2 border rounded-xl p-3"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold uppercase text-slate-500">
-                                To Date
-                            </label>
-                            <input
-                                type="date"
-                                value={toDate}
-                                onChange={(e) =>
-                                    setToDate(e.target.value)
-                                }
-                                className="w-full mt-2 border rounded-xl p-3"
-                            />
-                        </div>
-
-                        <p className="text-xs text-slate-500 mt-2">
-                            {fromDate || toDate
-                                ? "Selected date range will be exported."
-                                : "Leave dates empty to export lifetime data."}
-                        </p>
-
-                    </div>
-                )}
-
-
-
-                {reportType === "history" && (
-                    <div className="mt-6">
-                        <label className="text-xs font-bold uppercase text-slate-500">
-                            Select Student
-                        </label>
-                        <select
-                            value={selectedStudent}
-                            onChange={(e) =>
-                                setSelectedStudent(e.target.value)
-                            }
-                            className="w-full mt-2 border rounded-xl p-3"
-                        >
-                            <option value="all">
-                                {selectedBatch === "all"
-                                    ? "All Students"
-                                    : "All Students"}
-                            </option>
-                            {filteredStudents.map((student) => (
-                                <option
-                                    key={student.id}
-                                    value={student.id}
-                                >
-                                    {student.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-
-
-                {/* Info */}
-                {reportType === "complete" && (
-
-                    <div className="mt-6 bg-blue-50 rounded-2xl p-4">
-
-                        <p className="font-semibold text-blue-700">
-
-                            This report includes:
-
-                        </p>
-
-                        <ul className="mt-2 text-sm text-slate-600 space-y-1">
-
-                            <li>• All Students</li>
-
-                            <li>• Paid Students</li>
-
-                            <li>• Pending Fees</li>
-
-                            <li>• Collection Report</li>
-
-                            <li>• Course Wise</li>
-
-                            <li>• Batch Wise</li>
-
-                        </ul>
-                    </div>
-
-                )}
-
-                {reportType === "special" && (
-
-                    <div className="mt-6 bg-orange-50 rounded-2xl p-4">
-
-                        <p className="font-semibold text-orange-700">
-
-                            Includes:
-
-                        </p>
-
-                        <ul className="mt-2 text-sm text-slate-600 space-y-1">
-
-                            <li>• Inactive Students</li>
-
-                            <li>• Notes Disabled</li>
-
-                            <li>• No Batch Assigned</li>
-
-                        </ul>
-
-                    </div>
-
-                )}
-
-                {/* Footer */}
-
-                <div className="flex justify-end gap-3 mt-8">
-
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                    >
-                        Cancel
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        onClick={() =>
-                            onPrint(
-                                reportType,
-                                selectedCourse,
-                                selectedBatch,
-                                selectedStudent,
-                                fromDate,
-                                toDate
-                            )
-                        }
-                    >
-                        <Printer
-                            className="mr-2"
-                            size={16}
-                        />
-                        Print
-                    </Button>
-
-
-                    <Button
-                        onClick={() =>
-                            onExportExcel(
-                                reportType,
-                                selectedCourse,
-                                selectedBatch,
-                                selectedStudent,
-                                fromDate,
-                                toDate
-                            )
-                        }
-                    >
-                        <FileSpreadsheet
-                            className="mr-2"
-                            size={16}
-                        />
-
-                        Export Excel
-
-                    </Button>
-
-                </div>
-
+   return (
+  <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+    
+    {/* Main Container Card */}
+    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden transition-all">
+      
+      {/* 1. HERO HEADER */}
+      <div className="p-6 pb-5 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-extrabold uppercase tracking-wider border border-blue-500/20">
+            <FileSpreadsheet className="h-3 w-3" /> Report Generator
+          </div>
+          <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+            Export Fees Report
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Select filters below to generate custom data reports or spreadsheets.
+          </p>
+        </div>
+
+        <button 
+          onClick={onClose}
+          className="p-2 rounded-2xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* 2. FORM BODY */}
+      <div className="p-6 max-h-[75vh] overflow-y-auto space-y-5">
+        
+        {/* Report Type */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Report Type
+          </label>
+          <div className="relative">
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-3 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+            >
+              <option value="current">Current View</option>
+              <option value="complete">Complete Report</option>
+              <option value="course">Course Report</option>
+              <option value="batch">Batch Report</option>
+              <option value="pending">Pending Fees</option>
+              <option value="paid">Paid Students</option>
+              <option value="collection">Collection Report</option>
+              <option value="history">Payment History</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Course Filter */}
+        {(reportType === "course" ||
+          reportType === "batch" ||
+          reportType === "paid" ||
+          reportType === "collection" ||
+          reportType === "history") && (
+          <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+            <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Select Course
+            </label>
+            <select
+              value={selectedCourse}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedCourse(value);
+                setSelectedBatch("all");
+                setSelectedStudent("all");
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-3 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+            >
+              <option value="all">All Courses</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.course_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Batch Filter */}
+        {(reportType === "batch" ||
+          reportType === "paid" ||
+          reportType === "collection" ||
+          reportType === "history") && (
+          <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+            <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Select Batch
+            </label>
+            <select
+              value={selectedBatch}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedBatch(value);
+                setSelectedStudent("all");
+              }}
+              disabled={selectedCourse === "all"}
+              className={`w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-3 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer ${
+                selectedCourse === "all"
+                  ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800/30"
+                  : ""
+              }`}
+            >
+              <option value="all">
+                {selectedCourse === "all" ? "All Batches" : "All Batches"}
+              </option>
+              {filteredBatches.map((batch) => (
+                <option key={batch.id} value={batch.id}>
+                  {batch.batch_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Date Filter Section */}
+        {showDateFilter && (
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  From Date
+                </label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl p-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  To Date
+                </label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl p-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
             </div>
 
-        </div>
-    );
+            <p className="text-[11px] font-medium text-slate-400 italic">
+              {fromDate || toDate
+                ? "✓ Selected date range filter applied."
+                : "ℹ Leave empty to export lifetime data."}
+            </p>
+          </div>
+        )}
+
+        {/* Student Filter */}
+        {reportType === "history" && (
+          <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+            <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Select Student
+            </label>
+            <select
+              value={selectedStudent}
+              onChange={(e) => setSelectedStudent(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-3 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+            >
+              <option value="all">
+                {selectedBatch === "all" ? "All Students" : "All Students"}
+              </option>
+              {filteredStudents.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Info Banner: Complete Report */}
+        {reportType === "complete" && (
+          <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2 animate-in fade-in duration-200">
+            <p className="text-xs font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+              This report includes:
+            </p>
+            <ul className="grid grid-cols-2 gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                All Students
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                Paid Students
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                Pending Fees
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                Collection Report
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                Course Wise
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                Batch Wise
+              </li>
+            </ul>
+          </div>
+        )}
+
+        {/* Info Banner: Special Report */}
+        {reportType === "special" && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2 animate-in fade-in duration-200">
+            <p className="text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+              Includes:
+            </p>
+            <ul className="space-y-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Inactive Students
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Notes Disabled
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                No Batch Assigned
+              </li>
+            </ul>
+          </div>
+        )}
+
+      </div>
+
+      {/* 3. FLOATING ACTION FOOTER */}
+      <div className="p-5 bg-slate-50/80 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+        <Button
+          variant="outline"
+          onClick={onClose}
+          className="h-10 px-4 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+        >
+          Cancel
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={() =>
+            onPrint(
+              reportType,
+              selectedCourse,
+              selectedBatch,
+              selectedStudent,
+              fromDate,
+              toDate
+            )
+          }
+          className="h-10 px-4 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-1.5"
+        >
+          <Printer size={15} />
+          Print
+        </Button>
+
+        <Button
+          onClick={() =>
+            onExportExcel(
+              reportType,
+              selectedCourse,
+              selectedBatch,
+              selectedStudent,
+              fromDate,
+              toDate
+            )
+          }
+          className="h-10 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/20 gap-2 transition-all active:scale-95"
+        >
+          <FileSpreadsheet size={15} />
+          Export Excel
+        </Button>
+      </div>
+
+    </div>
+  </div>
+);
 }

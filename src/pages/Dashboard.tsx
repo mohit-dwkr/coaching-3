@@ -3,6 +3,8 @@ import { supabase } from "@/supabaseClient";
 import StudyMaterialSection from "@/components/StudyMaterialSection";
 import NotificationSection from "@/components/NotificationSection";
 import Payment from "@/components/Payment";
+import StudentProfileDrawer from "@/components/StudentProfileDrawer";
+import DashboardTab from "@/components/DashboardTab";
 import { toast } from "sonner";
 import {
   CreditCard,
@@ -17,7 +19,6 @@ import {
   X,
   Menu,
 } from "lucide-react";
-
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Dashboard() {
@@ -37,7 +38,7 @@ export default function Dashboard() {
     useState(false);
 
   const [activeTab, setActiveTab] =
-    useState("study");
+    useState("dashboard");
 
   // Edit
   const [isEditing, setIsEditing] =
@@ -47,9 +48,7 @@ export default function Dashboard() {
 
   const [editData, setEditData] = useState({
     name: "",
-    email: "",
     mobile: "",
-    course: "",
   });
 
   // Notes Count
@@ -65,10 +64,7 @@ export default function Dashboard() {
 
     setEditData({
       name: profile.name || "",
-      email: profile.email || "",
       mobile: profile.mobile || "",
-      course:
-        profile.course?.course_name || "",
     });
   }, [profile]);
 
@@ -95,6 +91,7 @@ export default function Dashboard() {
 
         const userId = session.user.id;
         await fetchCourses();
+
         // FETCH PROFILE
 
         const {
@@ -102,13 +99,18 @@ export default function Dashboard() {
           error: studentError,
         } = await supabase
           .from("Coaching-3_Students")
-          .select("*")
+          .select(`
+    *,
+    course:course_id(
+        course_name
+    ),
+    batch_relation:batch_id(
+        batch_name
+    )
+`)
           .eq("user_id", userId)
           .maybeSingle();
 
-        if (studentError) {
-          throw studentError;
-        }
 
         const {
           data: profileData,
@@ -152,24 +154,19 @@ export default function Dashboard() {
         // VALID USER
         if (mounted) {
 
-          setProfile({
+          const mergedProfile = {
 
             ...profileData,
 
-            student_id: studentData?.student_id,
+            ...studentData,
 
-            batch: studentData?.batch,
+          };
 
-            notes_access: studentData?.notes_access,
-
-            student_status: studentData?.status,
-
-          });
+          setProfile(mergedProfile);
 
           setStatus(profileData.status);
 
         }
-
 
       } catch (err: any) {
         console.error(
@@ -286,17 +283,16 @@ export default function Dashboard() {
           setProfile((prev: any) => ({
             ...prev,
 
-            // Student Table Fields
             student_id: student.student_id,
-            batch: student.batch,
             notes_access: student.notes_access,
             student_status: student.status,
 
-            // Profile Fields
             name: student.name,
             email: student.email,
             mobile: student.mobile,
-            course: student.course?.course_name || "",
+
+            roll_number: student.roll_number,
+            joined_at: student.joined_at,
           }));
         }
       )
@@ -342,22 +338,17 @@ export default function Dashboard() {
       return toast.error("Enter valid mobile number");
     }
 
-    if (!editData.course.trim()) {
-      return toast.error("Select course");
-    }
-
     setSaving(true);
 
     try {
       const updatedPayload = {
+
         name: editData.name.trim(),
+
         mobile: editData.mobile.trim(),
 
-        course_id: null,
-        batch_id: null,
-        batch: "Not Assigned",
-
         updated_at: new Date().toISOString(),
+
       };
 
       // ✅ Update StudentApprovals
@@ -389,10 +380,13 @@ export default function Dashboard() {
         ...prev,
         ...updatedPayload,
       }));
-
+      setEditData({
+        name: updatedPayload.name,
+        mobile: updatedPayload.mobile,
+      });
       setIsEditing(false);
-
       toast.success("Profile updated successfully!");
+
 
     } catch (error: any) {
       console.error(error);
@@ -448,7 +442,7 @@ export default function Dashboard() {
 
         <div>
           <h2 className="text-xl font-black text-white ">
-            TOPPERS <span className="text-blue-600">ACADEMY</span>
+            Your <span className="text-blue-600 text-2xl">Institute</span>
           </h2>
 
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -482,6 +476,11 @@ export default function Dashboard() {
 
           <nav className="space-y-2 py-8">
             {[
+              {
+                id: "dashboard",
+                icon: LayoutDashboard,
+                label: "Dashboard",
+              },
               {
                 id: "study",
                 icon: BookOpen,
@@ -581,6 +580,13 @@ export default function Dashboard() {
 
                 <nav className="space-y-2 py-8">
                   {[
+
+                    {
+                      id: "dashboard",
+                      icon: LayoutDashboard,
+                      label: "Dashboard",
+                    },
+
                     {
                       id: "study",
                       icon: BookOpen,
@@ -622,54 +628,67 @@ export default function Dashboard() {
       {/* ================= RIGHT SIDE ================= */}
       <div className="flex-1 md:ml-72">
 
-        {/* TOPBAR */}
-        <div className="bg-slate-900 border-b border-slate-800 h-16 sticky top-0 z-40 flex items-center justify-between px-4 md:px-8">
+ {/* TOPBAR */}
+<div className="sticky top-0 z-40 h-16 w-full bg-slate-900 backdrop-blur-xl border-b border-slate-800/80 flex items-center justify-between px-4 md:px-8 transition-all">
 
-          {/* LEFT */}
-          <div className="flex items-center gap-3">
+  {/* LEFT */}
+  <div className="flex items-center gap-3">
 
-            {/* MOBILE MENU */}
-            <button
-              onClick={() =>
-                setIsSidebarOpen(true)
-              }
-              className="md:hidden text-white"
-            >
-              <Menu size={24} />
-            </button>
+    {/* MOBILE MENU BUTTON */}
+    <button
+      onClick={() => setIsSidebarOpen(true)}
+      className="md:hidden p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all duration-200 active:scale-95"
+      aria-label="Open Sidebar"
+    >
+      <Menu size={20} />
+    </button>
 
-            <div className="flex items-center gap-2">
-              <LayoutDashboard className="text-blue-500 h-5 w-5" />
+    {/* DASHBOARD BRAND / TITLE */}
+    <div className="flex items-center gap-3 group cursor-pointer">
+      <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-105 group-hover:bg-indigo-500/20 group-hover:border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition-all duration-300">
+        <LayoutDashboard className="h-5 w-5" />
+      </div>
 
-              <h1 className="font-black text-white tracking-tight text-lg uppercase italic">
-                Dashboard
-              </h1>
-            </div>
-          </div>
+      <div className="flex flex-col">
+        <h1 className="font-black text-white tracking-wider text-base md:text-lg uppercase bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent italic">
+          Dashboard
+        </h1>
+      </div>
+    </div>
+  </div>
 
-          {/* RIGHT */}
-          <div className="flex items-center gap-4">
+  {/* RIGHT */}
+  <div className="flex items-center gap-4">
 
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-bold text-white leading-none">
-                {profile?.name}
-              </p>
+    {/* USER DETAILS (DESKTOP) */}
+    <div className="hidden md:flex flex-col items-end">
+      <p className="text-base font-bold text-slate-100 leading-none tracking-tight">
+        {profile?.name || "Student"}
+      </p>
 
-              <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                Class {profile?.class}
-              </p>
-            </div>
+      <div className="mt-1 flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest leading-none">
+          {profile?.course?.course_name || "Enrolled Student"}
+        </p>
+      </div>
+    </div>
 
-            <button
-              onClick={() =>
-                setIsProfileOpen(true)
-              }
-              className="h-10 w-10 rounded-full bg-blue-600 overflow-hidden text-white flex items-center justify-center font-bold border-2 border-slate-700 hover:scale-105 transition-transform"
-            >
-              {profile?.name?.charAt(0) || "S"}
-            </button>
-          </div>
-        </div>
+    {/* AVATAR PROFILE BUTTON */}
+    <button
+      onClick={() => setIsProfileOpen(true)}
+      className="relative group focus:outline-none"
+    >
+      {/* Outer Glow Ring on Hover */}
+      <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-blue-500 opacity-50 group-hover:opacity-100 blur-xs transition duration-300 group-hover:scale-105" />
+
+      {/* Avatar Box */}
+      <div className="relative h-10 w-10 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-indigo-300 text-sm font-black tracking-wider uppercase overflow-hidden shadow-lg transition-transform duration-200 group-active:scale-95">
+        {profile?.name?.charAt(0) || "S"}
+      </div>
+    </button>
+  </div>
+</div>
 
         {/* MAIN CONTENT */}
         <main className="p-6 md:p-10">
@@ -686,6 +705,14 @@ export default function Dashboard() {
               </motion.div>
             ) : (
               <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+
+                {activeTab === "dashboard" && (
+                  <DashboardTab
+                    profile={profile}
+                    status={status}
+                  />
+                )}
+
                 {activeTab === "study" && <StudyMaterialSection
                   courseId={profile?.course_id || ""}
                   notesAccess={profile?.notes_access}
@@ -700,110 +727,29 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* --- SIDE PROFILE DRAWER --- */}
-      <AnimatePresence>
-        {isProfileOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileOpen(false)} className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60]" />
-            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} className="fixed right-0 top-0 h-full w-[82%] max-w-sm bg-white z-[70] shadow-2xl p-8 overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-black text-xl text-slate-900 uppercase tracking-tighter">Student Profile</h3>
-                <button onClick={() => setIsProfileOpen(false)} className="text-slate-400 hover:text-slate-900"><X size={24} /></button>
-              </div>
 
-              {/* Avatar & Status Section */}
-              <div className="flex flex-col items-center mb-8">
-                <div className="w-24 h-24 rounded-full bg-blue-600 border-4 border-slate-100 shadow-inner flex items-center justify-center text-white text-3xl font-black overflow-hidden mb-3">
-                  {profile?.name?.charAt(0)}
-                </div>
-                <div className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${status === 'approved' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-amber-50 text-amber-600 border-amber-100'
-                  }`}>
-                  {status}
-                </div>
-              </div>
+      <StudentProfileDrawer
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
 
-              {/* Information Fields */}
-              {/* Information Fields */}
-              <div className="space-y-4">
-                {[
-                  { label: "Full Name", key: "name" },
-                  { label: "Contact Email", key: "email" },
-                  { label: "Mobile Number", key: "mobile" },
-                  { label: "Standard / Class", key: "class" },
-                ].map((field) => (
-                  <div key={field.key} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{field.label}</p>
+        profile={profile}
+        status={status}
 
-                    {/* Yahan change hai: isEditing true ho AUR field email NA ho, tabhi input dikhao */}
-                    {isEditing && field.key !== "email" ? (
-                      <input
-                        type={field.key === "class" ? "number" : "text"}
-                        value={editData[field.key as keyof typeof editData]}
-                        onChange={(e) => setEditData({ ...editData, [field.key]: e.target.value })}
-                        className="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:ring-2 ring-blue-100"
-                      />
-                    ) : (
-                      /* Email ke liye ya normal mode ke liye sirf text dikhega */
-                      <p className={`text-sm font-bold ${field.key === "email" && isEditing ? 'text-slate-400' : 'text-slate-800'}`}>
-                        {profile?.[field.key] || "Not Set"}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
+        studentId={studentId}
+        batch={batch}
 
-              <div className="rounded-xl bg-slate-50 p-4 border">
-                <p className="text-xs text-slate-500 uppercase">
-                  Student ID
-                </p>
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
 
-                <p className="font-bold">
-                  {studentId}
-                </p>
-              </div>
+        editData={editData}
+        setEditData={setEditData}
 
-              <div className="rounded-xl bg-slate-50 p-4 border">
-                <p className="text-xs text-slate-500 uppercase">
-                  Batch
-                </p>
+        saving={saving}
 
-                <p className="font-bold">
-                  {batch}
-                </p>
-              </div>
+        handleUpdateProfile={handleUpdateProfile}
+      />
 
-              {/* Bottom Action Buttons */}
-              <div className="mt-8 space-y-3">
-                {isEditing ? (
-                  <button
-                    onClick={handleUpdateProfile}
-                    className="w-full py-4 rounded-2xl bg-blue-600 text-white font-black flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-100"
-                  >
-                    <Save size={18} /> SAVE CHANGES
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="w-full py-4 rounded-2xl bg-slate-900 text-white font-black flex items-center justify-center gap-2 hover:bg-slate-800"
-                  >
-                    <Edit3 size={18} /> EDIT PROFILE
-                  </button>
-                )}
 
-                <button
-                  onClick={async () => {
-                    await supabase.auth.signOut();
-                    window.location.href = "/userlogin";
-                  }}
-                  className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-all"
-                >
-                  <LogOut size={18} /> LOGOUT
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

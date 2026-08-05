@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, CreditCard } from "lucide-react";
-import { StudentFeeData} from "./types";
+import { StudentFeeData } from "./types";
 
 interface StudentFeeTableProps {
   items: StudentFeeData[];
@@ -64,174 +64,244 @@ export default function StudentFeeTable({
     }
   };
 
+
+  // 1. Loading Skeleton State
   if (loading) {
-    return (
-      <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/70 border-b border-slate-200">
-              <TableRow>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Student Details</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Course / Track</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Assigned Batch</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Total Course Fee</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Discount</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Final Payable Fee</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Collected</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Outstanding Balance</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Due Date</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Status</TableHead>
-                <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right w-[140px]">Actions</TableHead>
+   return (
+      <div className="w-full rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm border border-slate-200/80 dark:border-slate-800">
+        <Table className="w-full">
+          <TableHeader className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800">
+            <TableRow>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-3">Student Name</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-2">Course</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-2">Batch</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2">Total Fee</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2">Discount</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2">Payable Fee</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2">Collected</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2">Outstanding</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-2">Due Date</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-2">Status</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-3">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...Array(5)].map((_, index) => (
+              <TableRow key={index} className="border-b border-slate-100 dark:border-slate-800">
+                <TableCell className="py-3 px-3"><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell className="py-3 px-2"><Skeleton className="h-4 w-16" /></TableCell>
+                <TableCell className="py-3 px-2"><Skeleton className="h-4 w-16" /></TableCell>
+                <TableCell className="py-3 px-2 text-right"><Skeleton className="h-4 w-14 ml-auto" /></TableCell>
+                <TableCell className="py-3 px-2 text-right"><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
+                <TableCell className="py-3 px-2 text-right"><Skeleton className="h-4 w-14 ml-auto" /></TableCell>
+                <TableCell className="py-3 px-2 text-right"><Skeleton className="h-4 w-14 ml-auto" /></TableCell>
+                <TableCell className="py-3 px-2 text-right"><Skeleton className="h-4 w-14 ml-auto" /></TableCell>
+                <TableCell className="py-3 px-2"><Skeleton className="h-4 w-16" /></TableCell>
+                <TableCell className="py-3 px-2"><Skeleton className="h-5 w-14" /></TableCell>
+                <TableCell className="py-3 px-3 text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[...Array(5)].map((_, index) => (
-                <TableRow key={index} className="border-b border-slate-100">
-                  <TableCell className="py-3.5"><Skeleton className="h-4 w-28" /></TableCell>
-                  <TableCell className="py-3.5"><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell className="py-3.5"><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell className="py-3.5 text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
-                  <TableCell className="py-3.5 text-right"><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
-                  <TableCell className="py-3.5 text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
-                  <TableCell className="py-3.5 text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
-                  <TableCell className="py-3.5 text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
-                  <TableCell className="py-3.5"><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell className="py-3.5"><Skeleton className="h-5 w-16" /></TableCell>
-                  <TableCell className="py-3.5 text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   }
 
+  // 2. Empty State
   if (items.length === 0) {
     return (
-      <Card className="w-full border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center p-12 text-center">
-        <div className="p-4 bg-white rounded-full shadow-sm border border-slate-100 mb-4 text-slate-400">
-          <CreditCard className="h-8 w-8" />
+      <Card className="w-full border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-3xl flex flex-col items-center justify-center p-12 text-center">
+        <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 mb-4 text-slate-400 dark:text-slate-500">
+          <CreditCard className="h-8 w-8 stroke-[1.8]" />
         </div>
-        <h3 className="font-semibold text-slate-900 text-lg">No Student Fees Found</h3>
-        <p className="text-sm text-slate-500 max-w-sm mt-1">
-          No student fee records found.
-          Assign a fee structure to students to begin fee tracking.
+        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg">No Student Fees Found</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 font-medium">
+          No student fee records found. Assign a fee structure to students to begin tracking.
         </p>
       </Card>
     );
   }
 
+  // 3. Main Data View (Responsive: Mobile Cards + Desktop Table)
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-sm">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader className="bg-slate-50/70 border-b border-slate-200">
-            <TableRow>
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Student Details</TableHead>
+    <div className="space-y-4 w-full">
+      {/* MOBILE VIEW (CARD LAYOUT - Visible only on small screens) */}
+      <div className="grid gap-3 md:hidden">
+        {items.map((ledger) => (
+          <div
+            key={ledger.id}
+            className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3"
+          >
+            {/* Header: Student Name & Status */}
+            <div className="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <div>
+                <h4 className="font-black text-slate-900 dark:text-slate-100 text-base">
+                  {ledger.student?.name ?? "-"}
+                </h4>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    {ledger.course?.course_name ?? "-"}
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    {ledger.student?.batch?.batch_name ?? "-"}
+                  </span>
+                </div>
+              </div>
+              <div>{getStatusBadge(ledger.status)}</div>
+            </div>
 
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Course / Track</TableHead>
+            {/* Grid Data Items */}
+            <div className="grid grid-cols-2 gap-2.5 text-xs py-1">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Final Fee</span>
+                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">₹{ledger.final_fee.toLocaleString("en-IN")}</p>
+              </div>
 
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Assigned Batch</TableHead>
+              <div className="space-y-0.5 text-right">
+                <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Collected</span>
+                <p className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">₹{ledger.paid_amount.toLocaleString("en-IN")}</p>
+              </div>
 
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Total Course Fee</TableHead>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Outstanding</span>
+                <p className={`font-bold text-sm ${ledger.remaining_amount > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-500"}`}>
+                  ₹{ledger.remaining_amount.toLocaleString("en-IN")}
+                </p>
+              </div>
 
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Discount</TableHead>
+              <div className="space-y-0.5 text-right">
+                <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Due Date</span>
+                <p className="font-medium text-slate-600 dark:text-slate-300">
+                  {ledger.next_due_date
+                    ? new Date(ledger.next_due_date).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "-"}
+                </p>
+              </div>
+            </div>
 
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Final Payable Fee</TableHead>
+            {/* Mobile Actions */}
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(ledger)}
+                className="flex-1 h-9 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl gap-1.5 text-xs font-bold shadow-none"
+              >
+                <Eye className="h-3.5 w-3.5" /> View Details
+              </Button>
 
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Collected</TableHead>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => onCollect?.(ledger)}
+                className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-xl gap-1.5 text-xs font-bold shadow-sm"
+              >
+                <CreditCard className="h-3.5 w-3.5" /> Collect
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
 
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right">Outstanding Balance</TableHead>
-
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Due Date</TableHead>
-
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase">Status</TableHead>
-
-              <TableHead className="font-semibold text-slate-700 h-11 text-xs tracking-wider uppercase text-right w-[140px]">Actions</TableHead>
+      {/* DESKTOP VIEW (TABLE LAYOUT - Fully Fluid & No Horizontal Scroll) */}
+      <div className="hidden md:block rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm w-full">
+        <Table className="w-full table-auto">
+          <TableHeader className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200/80 dark:border-slate-800">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-3 whitespace-nowrap">Student Name</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-2 whitespace-nowrap">Course</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-2 whitespace-nowrap">Batch</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2 whitespace-nowrap">Total Fee</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2 whitespace-nowrap">Discount</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2 whitespace-nowrap">Payable Fee</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2 whitespace-nowrap">Collected</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-2 whitespace-nowrap">Outstanding</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-2 whitespace-nowrap">Due Date</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase px-2 whitespace-nowrap">Status</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300 h-11 text-[11px] tracking-wider uppercase text-right px-3 whitespace-nowrap">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {items.map((ledger) => (
-              <TableRow key={ledger.id} className="hover:bg-slate-50/50 border-b border-slate-100 transition-colors">
-
-                <TableCell className="font-semibold text-slate-900 text-sm py-3.5">
+              <TableRow
+                key={ledger.id}
+                className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800/80 transition-colors"
+              >
+                <TableCell className="font-bold text-slate-900 dark:text-slate-100 text-xs py-3 px-3 whitespace-nowrap">
                   {ledger.student?.name ?? "-"}
                 </TableCell>
 
-                <TableCell className="text-slate-600 text-sm py-3.5">
+                <TableCell className="text-slate-600 dark:text-slate-300 text-xs font-semibold py-3 px-2 whitespace-nowrap">
                   {ledger.course?.course_name ?? "-"}
                 </TableCell>
 
-                <TableCell className="text-slate-600 text-sm py-3.5">
-                  <span className="bg-slate-100 px-2 py-0.5 rounded text-xs font-medium text-slate-700">
+                <TableCell className="text-slate-600 dark:text-slate-300 text-xs py-3 px-2 whitespace-nowrap">
+                  <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 px-2 py-0.5 rounded-md text-[11px] font-bold text-slate-700 dark:text-slate-300 inline-block">
                     {ledger.student?.batch?.batch_name ?? "-"}
                   </span>
                 </TableCell>
 
-                <TableCell className="font-medium text-slate-900 text-sm text-right py-3.5">
+                <TableCell className="font-medium text-slate-700 dark:text-slate-300 text-xs text-right py-3 px-2 whitespace-nowrap">
                   ₹{ledger.total_fee.toLocaleString("en-IN")}
                 </TableCell>
 
-                {/* Discount */}
-                <TableCell className="text-right font-medium text-slate-700 py-3.5 text-sm">
+                <TableCell className="text-right font-medium text-slate-500 dark:text-slate-400 py-3 px-2 text-xs whitespace-nowrap">
                   ₹{ledger.discount.toLocaleString("en-IN")}
                 </TableCell>
 
-                {/* Final Payable Fee */}
-                <TableCell className="text-right font-semibold text-slate-900 py-3.5 text-sm">
+                <TableCell className="text-right font-black text-slate-900 dark:text-slate-50 py-3 px-2 text-xs whitespace-nowrap">
                   ₹{ledger.final_fee.toLocaleString("en-IN")}
                 </TableCell>
 
-                {/* Collected */}
-                <TableCell className="text-right font-semibold text-emerald-600 py-3.5 text-sm">
+                <TableCell className="text-right font-bold text-emerald-600 dark:text-emerald-400 py-3 px-2 text-xs whitespace-nowrap">
                   ₹{ledger.paid_amount.toLocaleString("en-IN")}
                 </TableCell>
 
-                {/* Outstanding Balance */}
                 <TableCell
-                  className={`text-right font-semibold py-3.5 text-sm ${ledger.remaining_amount > 0
-                      ? "text-rose-600"
-                      : "text-slate-500"
-                    }`}
+                  className={`text-right font-bold py-3 px-2 text-xs whitespace-nowrap ${
+                    ledger.remaining_amount > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-400 dark:text-slate-500"
+                  }`}
                 >
                   ₹{ledger.remaining_amount.toLocaleString("en-IN")}
                 </TableCell>
 
-                <TableCell className="text-slate-500 text-sm py-3.5">
+                <TableCell className="text-slate-500 dark:text-slate-400 text-xs font-semibold py-3 px-2 whitespace-nowrap">
                   {ledger.next_due_date
                     ? new Date(ledger.next_due_date).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
                     : "-"}
                 </TableCell>
 
-                <TableCell className="font-semibold text-slate-900 text-sm py-3.5">
+                <TableCell className="font-semibold text-slate-900 text-xs py-3 px-2 whitespace-nowrap">
                   {getStatusBadge(ledger.status)}
                 </TableCell>
 
-                <TableCell className="text-right py-3.5">
-                  <div className="flex items-center justify-end gap-1.5">
+                <TableCell className="text-right py-3 px-3 whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => onEdit(ledger)}
-                      className="h-8 px-2.5 border-slate-200 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 rounded-lg gap-1 text-xs font-medium shadow-none"
+                      className="h-7 px-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg gap-1 text-[11px] font-bold shadow-none"
                     >
-                      <Eye className="h-3.5 w-3.5" /> View
+                      <Eye className="h-3 w-3" /> View
                     </Button>
 
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => onCollect?.(ledger)}
-                      
-                      className="h-8 px-2.5 border-slate-200 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 rounded-lg gap-1 text-xs font-medium shadow-none"
+                      className="h-7 px-2 border-blue-200 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 hover:text-blue-700 bg-blue-50/50 dark:bg-blue-950/40 hover:bg-blue-100/50 rounded-lg gap-1 text-[11px] font-bold shadow-none"
                     >
-                      <CreditCard className="h-3.5 w-3.5" /> Collect
+                      <CreditCard className="h-3 w-3" /> Collect
                     </Button>
                   </div>
                 </TableCell>

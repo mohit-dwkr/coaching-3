@@ -23,7 +23,15 @@ import {
 
 import CollectPaymentDrawer from "./CollectPaymentDrawer/CollectPaymentDrawer";
 
-const StudentFeeSection = () => {
+interface StudentFeeSectionProps {
+  searchQuery: string;
+  refreshTrigger: number;
+}
+
+const StudentFeeSection = ({
+  searchQuery,
+  refreshTrigger,
+}: StudentFeeSectionProps) => {
   const [studentFees, setStudentFees] = useState<StudentFeeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -1076,42 +1084,49 @@ if (reportType === "history") {
 
 };
 
-  return (
-    <>
-
-      <div className="flex justify-end mb-4">
-        <Button
-          onClick={() =>
-            setIsExportModalOpen(true)
-          }
-        >
-          <FileSpreadsheet
-            className="mr-2"
-            size={16}
-          />
-          Export Report
-        </Button>
+return (
+  <div className="space-y-8 animate-in fade-in duration-300">
+    {/* Top Bar Action (Export Button) */}
+    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+      <div>
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight">
+          Student Fee Management
+        </h2>
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          Monitor collections, manage student ledgers, and export financial audit logs.
+        </p>
       </div>
 
+      <Button
+        onClick={() => setIsExportModalOpen(true)}
+        className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+      >
+        <FileSpreadsheet className="h-4 w-4 stroke-[2.2]" />
+        <span>Export Report</span>
+      </Button>
+    </div>
 
-      <FeeAnalyticsDashboard
-        studentFees={studentFees}
-        feeTransactions={feeTransactions}
-      />
+    {/* Analytics Dashboard Component */}
+    <FeeAnalyticsDashboard
+      studentFees={studentFees}
+      feeTransactions={feeTransactions}
+    />
 
-      <StudentFeeFilters
-        filter={filter}
-        onFilterChange={setFilter}
-        totalCount={totalCount}
-        assignedCount={assignedCount}
-        unassignedCount={unassignedCount}
-        pendingCount={pendingCount}
-        overdueCount={overdueCount}
-        partialCount={partialCount}
-      />
+    {/* Student Fee Filters */}
+    <StudentFeeFilters
+      filter={filter}
+      onFilterChange={setFilter}
+      totalCount={totalCount}
+      assignedCount={assignedCount}
+      unassignedCount={unassignedCount}
+      pendingCount={pendingCount}
+      overdueCount={overdueCount}
+      partialCount={partialCount}
+    />
 
-
-      {filter !== "unassigned" && (
+    {/* Main Assigned Student Fee Table */}
+    {filter !== "unassigned" && (
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden p-1">
         <StudentFeeTable
           items={filteredStudentFees}
           loading={loading}
@@ -1123,12 +1138,20 @@ if (reportType === "history") {
             setSelectedFee(fee);
             setPaymentDrawerOpen(true);
           }}
-          onDelete={() => { }}
+          onDelete={() => {}}
         />
-      )}
+      </div>
+    )}
 
-      {(filter === "all" || filter === "unassigned") && (
-        <div className="mt-6">
+    {/* Unassigned Students Section */}
+    {(filter === "all" || filter === "unassigned") && (
+      <div className="space-y-3 pt-2">
+        {filter === "all" && (
+          <div>
+        
+          </div>
+        )}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden p-1">
           <UnassignedStudentTable
             items={unassignedStudents}
             loading={loading}
@@ -1138,81 +1161,78 @@ if (reportType === "history") {
             }}
           />
         </div>
-      )}
+      </div>
+    )}
 
+    {/* Student Fee Edit Drawer */}
+    <StudentFeeDrawer
+      isOpen={drawerOpen}
+      onClose={() => {
+        setDrawerOpen(false);
+        setSelectedFee(null);
+        setSelectedStudent(null);
+      }}
+      studentFee={selectedFee}
+      feeStructures={feeStructures}
+      onSave={handleSaveFee}
+      onDataChanged={async () => {
+        await refreshData();
+      }}
+    />
 
-      <StudentFeeDrawer
-        isOpen={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          setSelectedFee(null);
-          setSelectedStudent(null);
-        }}
-        studentFee={selectedFee}
-        feeStructures={feeStructures}
-        onSave={handleSaveFee}
+    {/* Assign Fee Drawer */}
+    <AssignFeeDrawer
+      isOpen={assignDrawerOpen}
+      onClose={() => {
+        setAssignDrawerOpen(false);
+        setSelectedStudent(null);
+      }}
+      student={selectedStudent}
+      onAssigned={async () => {
+        await refreshData();
+        setAssignDrawerOpen(false);
+        setSelectedStudent(null);
+      }}
+    />
 
-        onDataChanged={async () => {
-          await refreshData();
-        }}
-      />
+    {/* Payment Collection Drawer */}
+    <CollectPaymentDrawer
+      isOpen={paymentDrawerOpen}
+      onClose={() => {
+        setPaymentDrawerOpen(false);
+        setSelectedFee(null);
+      }}
+      studentFee={selectedFee}
+      onPaymentSuccess={async () => {
+        await refreshData();
+      }}
+    />
 
-      <AssignFeeDrawer
-        isOpen={assignDrawerOpen}
-        onClose={() => {
-          setAssignDrawerOpen(false);
-          setSelectedStudent(null);
-        }}
-        student={selectedStudent}
-        onAssigned={async () => {
-          await refreshData();
-          setAssignDrawerOpen(false);
-          setSelectedStudent(null);
-        }}
-      />
-
-      <CollectPaymentDrawer
-        isOpen={paymentDrawerOpen}
-        onClose={() => {
-          setPaymentDrawerOpen(false);
-          setSelectedFee(null);
-        }}
-        studentFee={selectedFee}
-        onPaymentSuccess={async () => {
-          await refreshData();
-        }}
-      />
-
-
-      <ExportFeesModal
-        open={isExportModalOpen}
-        onClose={() =>
-          setIsExportModalOpen(false)
-        }
-        courses={courses}
-        batches={batches}
-
-        students={
-          [...new Map(
+    {/* Export Modal */}
+    <ExportFeesModal
+      open={isExportModalOpen}
+      onClose={() => setIsExportModalOpen(false)}
+      courses={courses}
+      batches={batches}
+      students={
+        [
+          ...new Map(
             feeTransactions
-              .map(transaction => {
+              .map((transaction) => {
                 const fee = studentFees.find(
-                  f => f.id === transaction.student_fee_id
+                  (f) => f.id === transaction.student_fee_id
                 );
                 return fee?.student;
               })
               .filter(Boolean)
-              .map(student => [student!.id, student])
-          ).values()]
-        }
+              .map((student) => [student!.id, student])
+          ).values(),
+        ]
+      }
+      onExportExcel={exportFees}
+      onPrint={printFees}
+    />
+  </div>
+);}
 
-        onExportExcel={exportFees}
-        onPrint={printFees}
-      />
-
-
-    </>
-  );
-};
-
-export default StudentFeeSection;
+export default StudentFeeSection

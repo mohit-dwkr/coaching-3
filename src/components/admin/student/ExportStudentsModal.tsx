@@ -252,7 +252,7 @@ return (
         </Button>
 
         <Button
-          className="w-full sm:w-auto h-11 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-95 order-1 sm:order-3"
+          className="w-full sm:w-auto h-11 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 transition-all active:scale-95 order-1 sm:order-3"
           onClick={() =>
             onExportExcel(
               reportType,
@@ -263,7 +263,7 @@ return (
             )
           }
         >
-          <FileSpreadsheet className="mr-2" size={16} />
+          <FileSpreadsheet className="mr-2 " size={16} />
           <span>Export Excel</span>
         </Button>
       </div>

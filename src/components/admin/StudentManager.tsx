@@ -1149,15 +1149,15 @@ const StudentManager = () => {
           <button
             onClick={() => setActiveTab("pending")}
             className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2.5 ${activeTab === "pending"
-                ? "bg-white text-amber-600 shadow-md shadow-slate-200/50 scale-[1.02]"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+              ? "bg-white text-amber-600 shadow-md shadow-slate-200/50 scale-[1.02]"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
               }`}
           >
             <span>Pending Requests</span>
             <span
               className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${activeTab === "pending"
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-slate-300/60 text-slate-700"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-slate-300/60 text-slate-700"
                 }`}
             >
               {filteredPending.length}
@@ -1168,15 +1168,15 @@ const StudentManager = () => {
           <button
             onClick={() => setActiveTab("students")}
             className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2.5 ${activeTab === "students"
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
               }`}
           >
             <span>Students</span>
             <span
               className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${activeTab === "students"
-                  ? "bg-white/20 text-white"
-                  : "bg-slate-300/60 text-slate-700"
+                ? "bg-white/20 text-white"
+                : "bg-slate-300/60 text-slate-700"
                 }`}
             >
               {filteredStudents.length}
@@ -1187,15 +1187,15 @@ const StudentManager = () => {
           <button
             onClick={() => setActiveTab("batch")}
             className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2.5 ${activeTab === "batch"
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
               }`}
           >
             <span>Batch Manager</span>
             <span
               className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${activeTab === "batch"
-                  ? "bg-white/20 text-white"
-                  : "bg-slate-300/60 text-slate-700"
+                ? "bg-white/20 text-white"
+                : "bg-slate-300/60 text-slate-700"
                 }`}
             >
               {batches.length}
@@ -1206,15 +1206,15 @@ const StudentManager = () => {
           <button
             onClick={() => setActiveTab("inactive")}
             className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2.5 ${activeTab === "inactive"
-                ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 scale-[1.02]"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+              ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 scale-[1.02]"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
               }`}
           >
             <span>Inactive</span>
             <span
               className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${activeTab === "inactive"
-                  ? "bg-white/20 text-white"
-                  : "bg-slate-300/60 text-slate-700"
+                ? "bg-white/20 text-white"
+                : "bg-slate-300/60 text-slate-700"
                 }`}
             >
               {inactiveStudents.length}
@@ -1340,8 +1340,8 @@ const StudentManager = () => {
                       key={filter}
                       onClick={() => setFilterType(filter as any)}
                       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${filterType === filter
-                          ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 scale-[1.02]"
-                          : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 border border-slate-200/60"
+                        ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 scale-[1.02]"
+                        : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 border border-slate-200/60"
                         }`}
                     >
                       {filter}

@@ -48,9 +48,11 @@ const tabs = [
 
 ] as const;
 
+
+
 type Tab = (typeof tabs)[number]["id"];
 
-type AdminRole = "owner" | "admin";
+type AdminRole = "owner" | "admin" | "teacher";
 
 interface AdminUser {
   id: string;
@@ -59,6 +61,8 @@ interface AdminUser {
   status: string;
   user_id: string;
 }
+
+
 
 const panels: Record<Tab, React.FC> = {
   batches: BatchManager,
@@ -75,7 +79,9 @@ const panels: Record<Tab, React.FC> = {
   attendance: AttendanceSection,
 };
 
-export default function Admin() {     
+
+
+export default function Admin() {
   const [active, setActive] = useState<Tab>("students");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -87,7 +93,50 @@ export default function Admin() {
     useState<AdminUser | null>(null);
 
   const navigate = useNavigate();
+
+  const visibleTabs =
+    currentAdmin?.role === "teacher"
+      ? tabs.filter((tab) =>
+        [
+          "attendance",
+          "material",
+          "videos",
+          "notification",
+        ].includes(tab.id)
+      )
+      : tabs;
+
   const Panel = panels[active];
+
+
+  const teacherAllowedTabs = [
+    "attendance",
+    "material",
+    "videos",
+    "notification",
+  ];
+
+  if (
+    currentAdmin?.role === "teacher" &&
+    !teacherAllowedTabs.includes(active)
+  ) {
+    return (
+      <div className="flex items-center justify-center h-[70vh]">
+        <div className="text-center">
+
+          <h2 className="text-2xl font-black text-slate-800">
+            Access Denied
+          </h2>
+
+          <p className="mt-2 text-slate-500">
+            You don't have permission to access this section.
+          </p>
+
+        </div>
+      </div>
+    );
+  }
+
 
   // ✅ Fetch All Admins
   const fetchAdmins = async () => {
@@ -149,6 +198,7 @@ export default function Admin() {
     await supabase.auth.signOut();
     navigate("/admin-login");
   };
+
 
   // ✅ Invite Admin
   const handleInvite = async (
@@ -248,6 +298,18 @@ export default function Admin() {
     }
   };
 
+
+  useEffect(() => {
+    if (!currentAdmin) return;
+    if (
+      currentAdmin.role === "teacher" &&
+      !visibleTabs.some(tab => tab.id === active)
+    ) {
+      setActive("attendance");
+    }
+  }, [currentAdmin, active, visibleTabs]);
+
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center text-slate-500 font-semibold">
@@ -297,7 +359,7 @@ export default function Admin() {
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {tabs.map((t) => {
+          {visibleTabs.map((t) => {
             const IsActive = active === t.id;
 
             return (
@@ -305,8 +367,8 @@ export default function Admin() {
                 key={t.id}
                 onClick={() => handleTabChange(t.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition ${IsActive
-                    ? "bg-primary text-white"
-                    : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-primary text-white"
+                  : "text-slate-600 hover:bg-slate-100"
                   }`}
               >
                 <t.icon className="h-5 w-5" />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { BookOpen, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/supabaseClient";
@@ -102,107 +102,98 @@ export default function CourseDrawer({
     }, [selectedCourse]);
 
 
-    return (
-        <>
-            {/* Overlay */}
-            <div
-                onClick={onClose}
-                className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 transition-opacity duration-300 ${isOpen
-                    ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
-                    }`}
-            />
+  return (
+  <>
+    {/* Overlay */}
+    <div
+      onClick={onClose}
+      className={`fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 transition-opacity duration-300 ease-in-out ${
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+    />
 
-            {/* Drawer */}
-            <div
-                className={`fixed top-0 right-0 h-full w-full sm:w-[500px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen
-                    ? "translate-x-0"
-                    : "translate-x-full"
-                    }`}
-            >
+    {/* Drawer */}
+    <div
+      className={`fixed top-0 right-0 h-full w-full sm:w-[480px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out flex flex-col ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      }`}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center gap-3.5">
+          <div className="h-10 w-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+            <BookOpen size={20} strokeWidth={2.2} />
+          </div>
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight leading-snug">
+              {selectedCourse ? "Edit Course" : "Create New Course"}
+            </h2>
+            <p className="text-slate-400 text-xs font-medium">
+              {selectedCourse
+                ? "Update course details and settings."
+                : "Add a new course program to your institute."}
+            </p>
+          </div>
+        </div>
 
-                {/* Header */}
+        <button
+          onClick={onClose}
+          className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          title="Close drawer"
+        >
+          <X size={18} strokeWidth={2.2} />
+        </button>
+      </div>
 
-                <div className="flex items-center justify-between p-6 border-b border-slate-200">
+      {/* Body Form */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <div>
+          <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider block mb-2">
+            Course Name <span className="text-rose-500">*</span>
+          </label>
+          <Input
+            value={courseName}
+            onChange={(e) => setCourseName(e.target.value)}
+            placeholder="e.g. Class 10th - Science & Math"
+            className="h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white text-sm font-semibold transition-all focus-visible:ring-indigo-500"
+          />
+        </div>
 
-                    <div>
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">
+              Description
+            </label>
+            <span className="text-[10px] text-slate-400 font-bold uppercase">Optional</span>
+          </div>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={5}
+            placeholder="Add brief details about the syllabus, target audience, or requirements..."
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white p-3 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+          />
+        </div>
+      </div>
 
-                        <h2 className="text-2xl font-black">
-                            {selectedCourse ? "Edit Course" : "Create Course"}
-                        </h2>
-
-                        <p className="text-slate-500 text-sm mt-1">
-                            {selectedCourse
-                                ? "Update course information."
-                                : "Add a new course for your coaching institute."}
-                        </p>
-
-                    </div>
-
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-full hover:bg-slate-100"
-                    >
-                        <X size={20} />
-                    </button>
-
-                </div>
-
-                {/* Body */}
-
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-                    <div>
-
-                        <label className="text-sm font-bold">
-                            Course Name
-                        </label>
-
-                        <Input
-                            value={courseName}
-                            onChange={(e) =>
-                                setCourseName(e.target.value)
-                            }
-                            placeholder="Example : Class 10"
-                            className="mt-2 h-12"
-                        />
-
-                    </div>
-
-                    <div>
-
-                        <label className="text-sm font-bold">
-                            Description
-                        </label>
-
-                        <textarea
-                            value={description}
-                            onChange={(e) =>
-                                setDescription(e.target.value)
-                            }
-                            rows={5}
-                            placeholder="Optional"
-                            className="w-full mt-2 rounded-xl border border-slate-300 p-3"
-                        />
-
-                    </div>
-
-                </div>
-
-                {/* Footer */}
-
-                <div className="border-t border-slate-200 p-6">
-
-                    <Button
-                        onClick={saveCourse}
-                        className="w-full h-12 rounded-xl font-bold"
-                    >
-                        {selectedCourse ? "Update Course" : "Create Course"}
-                    </Button>
-
-                </div>
-
-            </div>
-        </>
-    );
+      {/* Footer Actions */}
+      <div className="border-t border-slate-100 p-5 bg-slate-50/30 flex items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          className="h-11 px-5 rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-100"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={saveCourse}
+          className="flex-1 h-11 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all"
+        >
+          {selectedCourse ? "Save Changes" : "Create Course"}
+        </Button>
+      </div>
+    </div>
+  </>
+);
 }

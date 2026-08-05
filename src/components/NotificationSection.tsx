@@ -25,34 +25,42 @@ const NotificationSection = ({ profile }: { profile?: any }) => {
 
   // ✅ REACT QUERY: Data fetch aur Cache logic
   const { data: notifications = [], isLoading } = useQuery({
+
     queryKey: [
       "notifications",
       profile?.course_id,
       profile?.batch_id,
     ],
+
     queryFn: async () => {
+
       const { data, error } = await supabase
-        .from('Coaching-3_Notifications')
+        .from("Coaching-3_Notifications")
         .select(`
-  *,
-  course:course_id (
-    course_name
-  ),
-  batch:batch_id (
-    batch_name
-  )
-`)
+        *,
+        course:course_id(
+          course_name
+        ),
+        batch:batch_id(
+          batch_name
+        )
+      `)
         .or(
           `target_type.eq.global,course_id.eq.${profile?.course_id},batch_id.eq.${profile?.batch_id}`
         )
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
-      if (error) throw error
-      return (data as Notification[]) || []
+      if (error) throw error;
+
+      return (data as Notification[]) || [];
     },
-    staleTime: 1000 * 60 * 15, // 10 Minutes Cache
-    gcTime: 1000 * 60 * 30,    // 30 Minutes Memory
-  })
+
+    enabled: !!profile?.course_id,
+
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 30,
+
+  });
 
   const visibleNotifications = notifications
 
@@ -79,7 +87,7 @@ const NotificationSection = ({ profile }: { profile?: any }) => {
           </h2>
 
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
-            Updates for {profile?.course?.course_name}
+            Updates for {profile?.course?.course_name || "Your Course"}
           </p>
         </div>
       </div>

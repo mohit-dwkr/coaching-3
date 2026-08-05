@@ -35,18 +35,35 @@ export default function StudyMaterialSection({
     queryKey: ["study-materials", courseId],
     queryFn: async () => {
 
+
       // 1. PDF Materials Fetching
-      const { data: matData } = await supabase
+      const {
+        data: matData,
+        error: materialError,
+      } = await supabase
         .from("Coaching-3_StudyMaterial")
         .select("*")
         .eq("course_id", courseId)
-        .order("created_at", { ascending: false });
+        .order("created_at", {
+          ascending: false,
+        });
+      if (materialError) {
+        throw materialError;
+      }
+
 
       // 2. Video Fetching
-      const { data: vidData } = await supabase
-        .from('Coaching-3_VideoLectures')
-        .select('*')
+      const {
+        data: vidData,
+        error: videoError,
+      } = await supabase
+        .from("Coaching-3_VideoLectures")
+        .select("*")
         .eq("course_id", courseId);
+      if (videoError) {
+        throw videoError;
+      }
+
 
       // Dashboard counts logic
       if (matData) {
@@ -59,6 +76,9 @@ export default function StudyMaterialSection({
       }
       return { materials: matData || [], videos: vidData || [] };
     },
+
+      enabled: !!courseId,
+      
     staleTime: 1000 * 60 * 30, // 30 Min Cache
     gcTime: 1000 * 60 * 60,    // 1 Hour Memory
   });
@@ -271,8 +291,8 @@ export default function StudyMaterialSection({
                       setVideoPage(1);
                     }}
                     className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${selectedVideoSubject === ""
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-600"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 text-slate-600"
                       }`}
                   >
                     All Subjects
@@ -286,8 +306,8 @@ export default function StudyMaterialSection({
                         setVideoPage(1);
                       }}
                       className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${selectedVideoSubject === subject
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-100 text-slate-600"
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-100 text-slate-600"
                         }`}
                     >
                       {subject}

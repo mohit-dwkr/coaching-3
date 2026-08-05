@@ -9,9 +9,9 @@ import {
   Crown,
   Loader2,
 } from "lucide-react";
-import {toast} from "sonner"
+import { toast } from "sonner"
 
-type AdminRole = "owner" | "admin";
+type AdminRole = "owner" | "admin" | "teacher";
 
 interface AdminUser {
   id: string;
@@ -70,7 +70,7 @@ const AdminDrawer: React.FC<AdminDrawerProps> = ({
   const handleInvite = async () => {
     if (!inviteEmail.trim()) {
       toast.error("Please enter admin email");
-    return;
+      return;
     }
 
     // ✅ Email validation
@@ -125,21 +125,19 @@ const AdminDrawer: React.FC<AdminDrawerProps> = ({
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          isOpen
-            ? "opacity-100 visible"
-            : "opacity-0 invisible"
-        }`}
+        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen
+          ? "opacity-100 visible"
+          : "opacity-0 invisible"
+          }`}
         onClick={onClose}
       />
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 z-50 h-dvh w-full sm:w-[420px] bg-white shadow-2xl transition-transform duration-300 flex flex-col ${
-          isOpen
-            ? "translate-x-0"
-            : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 z-50 h-dvh w-full sm:w-[420px] bg-white shadow-2xl transition-transform duration-300 flex flex-col ${isOpen
+          ? "translate-x-0"
+          : "translate-x-full"
+          }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-blue-100 bg-gradient-to-r from-blue-600 to-blue-500 text-white">
@@ -234,11 +232,12 @@ const AdminDrawer: React.FC<AdminDrawerProps> = ({
 
                           {/* Role */}
                           <span
-                            className={`text-xs px-3 py-1 rounded-full font-medium ${
-                              admin.role === "owner"
+                            className={`text-xs px-3 py-1 rounded-full font-medium ${admin.role === "owner"
                                 ? "bg-yellow-100 text-yellow-700"
-                                : "bg-blue-100 text-blue-700"
-                            }`}
+                                : admin.role === "admin"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-emerald-100 text-emerald-700"
+                              }`}
                           >
                             {admin.role}
                           </span>
@@ -246,11 +245,10 @@ const AdminDrawer: React.FC<AdminDrawerProps> = ({
                           {/* Status */}
                           {admin.status && (
                             <span
-                              className={`text-xs px-3 py-1 rounded-full font-medium ${
-                                admin.status === "active"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
+                              className={`text-xs px-3 py-1 rounded-full font-medium ${admin.status === "active"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                                }`}
                             >
                               {admin.status}
                             </span>
@@ -291,7 +289,7 @@ const AdminDrawer: React.FC<AdminDrawerProps> = ({
           {isOwner && (
             <div className="p-5">
               <h3 className="text-sm font-semibold text-gray-500 mb-4">
-                INVITE NEW ADMIN
+                INVITE NEW User
               </h3>
 
               <div className="space-y-4">
@@ -299,7 +297,7 @@ const AdminDrawer: React.FC<AdminDrawerProps> = ({
                 {/* Email */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Admin Email
+                    User Email
                   </label>
 
                   <input
@@ -338,6 +336,10 @@ const AdminDrawer: React.FC<AdminDrawerProps> = ({
                     <option value="owner">
                       Owner
                     </option>
+
+                    <option value="teacher">
+                      Teacher
+                    </option>
                   </select>
                 </div>
 
@@ -358,7 +360,7 @@ const AdminDrawer: React.FC<AdminDrawerProps> = ({
                   ) : (
                     <>
                       <Plus size={18} />
-                      Invite Admin
+                      Invite User
                     </>
                   )}
                 </button>

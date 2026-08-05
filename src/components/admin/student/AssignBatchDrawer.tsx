@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Users, Layers } from "lucide-react";
+import { X, Users, Layers, CalendarCheck, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/supabaseClient";
 import { toast } from "sonner";
@@ -102,175 +102,142 @@ export default function AssignBatchDrawer({
 
 
     return (
-        <>
-            {/* Overlay */}
-            <div
-                onClick={onClose}
-                className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60]"
-            />
+    <>
+      {/* Backdrop Overlay with Smooth Fade */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[60] transition-opacity duration-300"
+      />
 
-            {/* Drawer */}
-            <div className="fixed top-0 right-0 h-full w-full sm:w-[480px] bg-white z-[70] shadow-2xl flex flex-col">
-
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-200">
-
-                    <div>
-                        <h2 className="text-2xl font-black text-slate-900">
-                            Assign Batch
-                        </h2>
-
-                        <p className="text-sm text-slate-500 mt-1">
-                            Assign this student to a coaching batch.
-                        </p>
-                    </div>
-
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-full hover:bg-slate-100"
-                    >
-                        <X size={20} />
-                    </button>
-
-                </div>
-
-                {/* Body */}
-
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-                    {/* Student */}
-
-                    <div className="border rounded-2xl p-5">
-
-                        <p className="text-xs uppercase tracking-widest font-black text-slate-400 mb-3">
-                            Student
-                        </p>
-
-                        <div className="flex items-center gap-4">
-
-                            <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center font-black text-blue-600">
-                                {student?.name?.charAt(0)?.toUpperCase()}
-                            </div>
-
-                            <div>
-
-                                <p className="font-black text-slate-900">
-                                    {student?.name}
-                                </p>
-
-                                <p className="text-sm text-slate-500">
-                                    {student?.student_id}
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    {/* Course */}
-
-                    <div className="border rounded-2xl p-5">
-
-                        <p className="text-xs uppercase tracking-widest font-black text-slate-400 mb-3">
-                            Course
-                        </p>
-
-                        <div className="flex items-center gap-3">
-
-                            <Layers
-                                size={18}
-                                className="text-blue-600"
-                            />
-
-                            <span className="font-bold text-slate-800">
-                                {student?.course?.course_name || "No Course"}
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    {/* Batch */}
-
-                    <div>
-
-                        <label className="text-sm font-bold text-slate-700">
-                            Select Batch
-                        </label>
-
-                        <select
-                            value={selectedBatch}
-                            onChange={(e) => setSelectedBatch(e.target.value)}
-                            className="mt-2 w-full h-12 rounded-xl border border-slate-300 px-4 outline-none focus:border-blue-500"
-                        >
-                            <option value="">
-                                Select Batch
-                            </option>
-
-                            {batches.map((batch) => (
-
-                                <option
-                                    key={batch.id}
-                                    value={batch.id}
-                                >
-                                    {batch.batch_name}
-                                </option>
-
-                            ))}
-
-                        </select>
-
-                    </div>
-
-                    {/* Empty */}
-
-                    {batches.length === 0 && (
-
-                        <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center">
-
-                            <Users
-                                size={40}
-                                className="mx-auto text-slate-300"
-                            />
-
-                            <p className="font-black text-slate-700 mt-4">
-                                No Active Batches
-                            </p>
-
-                            <p className="text-sm text-slate-500 mt-2">
-                                Create a batch for this course first.
-                            </p>
-
-                        </div>
-
-                    )}
-
-                </div>
-
-                {/* Footer */}
-
-                <div className="border-t border-slate-200 p-6 flex gap-3">
-
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                        className="flex-1 h-12 rounded-xl font-bold"
-                    >
-                        Cancel
-                    </Button>
-
-                    <Button
-                        onClick={assignBatch}
-                        className="flex-1 h-12 rounded-xl font-bold"
-                        disabled={!selectedBatch}
-                    >
-                        Assign Batch
-                    </Button>
-
-                </div>
-
+      {/* Drawer Side Panel */}
+      <div className="fixed top-0 right-0 h-full w-full sm:w-[480px] bg-slate-50 z-[70] shadow-2xl flex flex-col border-l border-slate-200 transition-transform duration-300 ease-in-out">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 bg-white border-b border-slate-200/80 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <UserCheck size={20} />
             </div>
-        </>
-    );
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                Assign Batch
+              </h2>
+              <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                Assign this student to an active coaching batch
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all border border-transparent hover:border-slate-200"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Scrollable Content Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+          
+          {/* Student Info Card */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm">
+            <p className="text-[11px] uppercase tracking-widest font-black text-slate-400 mb-3">
+              Student Details
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-100 border border-indigo-200/60 flex items-center justify-center font-black text-indigo-600 text-lg shadow-inner shrink-0">
+                {student?.name?.charAt(0)?.toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="font-extrabold text-slate-900 truncate text-base">
+                  {student?.name || "N/A"}
+                </p>
+                <p className="text-xs font-bold text-slate-400 mt-0.5 tracking-wide">
+                  ID: {student?.student_id || "N/A"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Course Info Card */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm">
+            <p className="text-[11px] uppercase tracking-widest font-black text-slate-400 mb-3">
+              Enrolled Course
+            </p>
+            <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200/60 text-indigo-600">
+                <Layers size={18} />
+              </div>
+              <span className="font-extrabold text-slate-800 text-sm truncate">
+                {student?.course?.course_name || "No Course Enrolled"}
+              </span>
+            </div>
+          </div>
+
+          {/* Batch Selector Input */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm">
+            <label className="text-xs uppercase tracking-widest font-black text-slate-400 block mb-2">
+              Select Batch
+            </label>
+
+            <div className="relative">
+              <select
+                value={selectedBatch}
+                onChange={(e) => setSelectedBatch(e.target.value)}
+                className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer appearance-none"
+              >
+                <option value="">Choose a batch from list...</option>
+                {batches.map((batch) => (
+                  <option key={batch.id} value={batch.id}>
+                    {batch.batch_name}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Dropdown Chevron Icon */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <CalendarCheck size={18} />
+              </div>
+            </div>
+          </div>
+
+          {/* Empty State when no batches are available */}
+          {batches.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-slate-300/80 bg-white p-8 text-center shadow-sm space-y-2">
+              <div className="h-14 w-14 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                <Users size={28} />
+              </div>
+              <p className="font-extrabold text-slate-800 text-base pt-2">
+                No Active Batches
+              </p>
+              <p className="text-xs text-slate-400 font-semibold max-w-xs mx-auto leading-relaxed">
+                There are no active batches found for this course. Please create a new batch in settings first.
+              </p>
+            </div>
+          )}
+
+        </div>
+
+        {/* Footer Actions */}
+        <div className="border-t border-slate-200/80 p-5 bg-white flex gap-3 shrink-0">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="flex-1 h-11 rounded-xl font-bold border-slate-200 hover:bg-slate-100 text-slate-700 transition-all"
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={assignBatch}
+            disabled={!selectedBatch}
+            className="flex-1 h-11 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none transition-all"
+          >
+            Assign Batch
+          </Button>
+        </div>
+
+      </div>
+    </>
+  );
 }

@@ -148,7 +148,7 @@ setSuccess(
           </h2>
 
           <p className="text-sm text-slate-500">
-            Create your admin account password
+            Create your account password
           </p>
         </div>
 
