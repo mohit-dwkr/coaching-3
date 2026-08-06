@@ -89,21 +89,26 @@ const SetPassword = () => {
         data: { user },
       } = await supabase.auth.getUser();
 
+
       if (user) {
-        await supabase
+        const { error: updateError } = await supabase
           .from("Coaching-3_Admins")
           .update({
             status: "active",
           })
           .eq("user_id", user.id);
+
+        if (updateError) {
+          setError(updateError.message);
+          return;
+        }
       }
 
+
       setSuccess(
-        "Password created successfully"
+        "Password created successfully. Redirecting to login..."
       );
 
-
-      // ✅ Redirect
       // ✅ Redirect to Login
       setTimeout(async () => {
         await supabase.auth.signOut(); // Invite session close

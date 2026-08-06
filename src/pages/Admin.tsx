@@ -131,9 +131,14 @@ export default function Admin() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setAdmins(data);
+    if (error) {
+      console.error(error);
+      toast.error("Failed to load admins");
+      return;
     }
+
+    setAdmins(data ?? []);
+
   };
 
   // 🔐 Protect Admin Route
@@ -235,7 +240,6 @@ export default function Admin() {
   };
 
   // ✅ Delete Admin
-  // ✅ Delete Admin
   const handleDelete = async (id: string) => {
     try {
 
@@ -285,7 +289,7 @@ export default function Admin() {
 
     } catch (err) {
       console.error(err);
-      toast.success("Failed to delete admin");
+      toast.error("Failed to delete admin");
     }
   };
 
@@ -342,7 +346,7 @@ export default function Admin() {
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {visibleTabs.map((t) => {
-           const IsActive = safeActive === t.id;
+            const IsActive = safeActive === t.id;
 
             return (
               <button
@@ -382,7 +386,7 @@ export default function Admin() {
           </button>
 
           <h1 className="text-sm font-bold uppercase tracking-wide text-slate-500">
-           Dashboard / {safeActive}
+            Dashboard / {safeActive}
           </h1>
 
           <button
