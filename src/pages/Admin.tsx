@@ -82,7 +82,9 @@ const panels: Record<Tab, React.FC> = {
 
 
 export default function Admin() {
+
   const [active, setActive] = useState<Tab>("students");
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -106,9 +108,6 @@ export default function Admin() {
       )
       : tabs;
 
-  const Panel = panels[active];
-
-
   const teacherAllowedTabs = [
     "attendance",
     "material",
@@ -116,26 +115,13 @@ export default function Admin() {
     "notification",
   ];
 
-  if (
+  const safeActive: Tab =
     currentAdmin?.role === "teacher" &&
-    !teacherAllowedTabs.includes(active)
-  ) {
-    return (
-      <div className="flex items-center justify-center h-[70vh]">
-        <div className="text-center">
+      !teacherAllowedTabs.includes(active)
+      ? "attendance"
+      : active;
 
-          <h2 className="text-2xl font-black text-slate-800">
-            Access Denied
-          </h2>
-
-          <p className="mt-2 text-slate-500">
-            You don't have permission to access this section.
-          </p>
-
-        </div>
-      </div>
-    );
-  }
+  const Panel = panels[safeActive];
 
 
   // ✅ Fetch All Admins
@@ -184,7 +170,12 @@ export default function Admin() {
 
       setCurrentAdmin(adminData);
 
-      // ✅ Fetch admins list
+      if (adminData.role === "teacher") {
+        setActive("attendance");
+      } else {
+        setActive("students");
+      }
+
       await fetchAdmins();
 
       setLoading(false);
@@ -299,15 +290,6 @@ export default function Admin() {
   };
 
 
-  useEffect(() => {
-    if (!currentAdmin) return;
-    if (
-      currentAdmin.role === "teacher" &&
-      !visibleTabs.some(tab => tab.id === active)
-    ) {
-      setActive("attendance");
-    }
-  }, [currentAdmin, active, visibleTabs]);
 
 
   if (loading) {
@@ -360,7 +342,7 @@ export default function Admin() {
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {visibleTabs.map((t) => {
-            const IsActive = active === t.id;
+           const IsActive = safeActive === t.id;
 
             return (
               <button
@@ -400,7 +382,7 @@ export default function Admin() {
           </button>
 
           <h1 className="text-sm font-bold uppercase tracking-wide text-slate-500">
-            Dashboard / {active}
+           Dashboard / {safeActive}
           </h1>
 
           <button

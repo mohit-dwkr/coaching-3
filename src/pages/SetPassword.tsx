@@ -85,27 +85,29 @@ const SetPassword = () => {
         return;
       }
 
-const {
-  data: { user },
-} = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-if (user) {
-  await supabase
-    .from("Coaching-3_Admins")
-    .update({
-      status: "active",
-    })
-    .eq("user_id", user.id);
-}
+      if (user) {
+        await supabase
+          .from("Coaching-3_Admins")
+          .update({
+            status: "active",
+          })
+          .eq("user_id", user.id);
+      }
 
-setSuccess(
-  "Password created successfully"
-);
+      setSuccess(
+        "Password created successfully"
+      );
 
 
       // ✅ Redirect
-      setTimeout(() => {
-        navigate("/admin");
+      // ✅ Redirect to Login
+      setTimeout(async () => {
+        await supabase.auth.signOut(); // Invite session close
+        navigate("/admin-login");
       }, 1500);
 
     } catch (err) {
