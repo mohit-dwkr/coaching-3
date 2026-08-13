@@ -88,9 +88,9 @@ export default function UserLogin() {
     const { data, error } = await supabase
       .from("Coaching-3_Courses")
       .select("*")
+      
       .eq("status", "active")
       .order("course_name");
-
     if (!error && data) {
       setCourses(data);
     }

@@ -4,8 +4,7 @@ import { printTable } from "@/utils/printTable";
 import { FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { toast } from "sonner";
 import StudentFeeTable from "./StudentFeeTable";
@@ -15,23 +14,52 @@ import AssignFeeDrawer from "./AssignFeeDrawer";
 import FeeAnalyticsDashboard from "./analytics/FeeAnalyticsDashboard";
 import StudentFeeFilters from "./StudentFeeFilters";
 
+import ReceiptPreviewDialog from "./receipt/ReceiptPreviewDialog";
+import { generateReceiptData } from "./receipt/generateReceiptData";
+
 import {
   StudentFeeData,
   FeeStructure,
   FeeTransaction,
+  PaymentHistory,
+  ReceiptData,
 } from "./types";
 
 import CollectPaymentDrawer from "./CollectPaymentDrawer/CollectPaymentDrawer";
+import { getCurrentAcademicYear } from "@/utils/academicYear";
+import BulkAssignFeeDrawer from "./BulkAssignFeeDrawer";
 
 interface StudentFeeSectionProps {
   searchQuery: string;
+  selectedCourse: string;
+  selectedBatch: string;
   refreshTrigger: number;
+
+  onCoursesChange: (courses: any[]) => void;
+  onBatchesChange: (batches: any[]) => void;
 }
 
 const StudentFeeSection = ({
   searchQuery,
+  selectedCourse,
+  selectedBatch,
   refreshTrigger,
+  onCoursesChange,
+  onBatchesChange,
 }: StudentFeeSectionProps) => {
+
+  const [selectedUnassignedStudents, setSelectedUnassignedStudents] =
+    useState<string[]>([]);
+
+  const [bulkAssignFeeOpen, setBulkAssignFeeOpen] =
+    useState(false);
+
+  const [recentReceipt, setRecentReceipt] =
+    useState<ReceiptData | null>(null);
+
+  const [recentReceiptOpen, setRecentReceiptOpen] =
+    useState(false);
+
   const [studentFees, setStudentFees] = useState<StudentFeeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -40,6 +68,9 @@ const StudentFeeSection = ({
   const [feeStructures, setFeeStructures] = useState<FeeStructure[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [feeTransactions, setFeeTransactions] = useState<FeeTransaction[]>([]);
+
+  const [previousDues, setPreviousDues] = useState<StudentFeeData[]>([]);
+  const [previousDuesOpen, setPreviousDuesOpen] = useState(false);
 
   const [assignDrawerOpen, setAssignDrawerOpen] = useState(false);
   const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
@@ -54,11 +85,36 @@ const StudentFeeSection = ({
 
   const fetchFeeTransactions = useCallback(async () => {
     try {
-
       const { data, error } = await supabase
         .from("Coaching-3_FeeTransactions")
-        .select("*")
-        .order("transaction_date", {
+        .select(`
+        *,
+        student_fee:student_fee_id(
+          id,
+          student_id,
+          course_id,
+          batch_id,
+          academic_year,
+
+          student:student_id(
+            id,
+            student_id,
+            name
+          ),
+
+          course:course_id(
+            id,
+            course_name
+          ),
+
+          batch:batch_id(
+            id,
+            batch_name,
+            course_id
+          )
+        )
+      `)
+        .order("created_at", {
           ascending: false,
         });
 
@@ -75,33 +131,40 @@ const StudentFeeSection = ({
 
   const fetchStudents = useCallback(async () => {
     try {
+      console.log("========== FETCH STUDENTS ==========");
+
       const { data, error } = await supabase
         .from("Coaching-3_Students")
         .select(`
-    id,
-    name,
-    email,
-    mobile,
-    class,
-    batch_id,
-    course_id,
+        *,
+        course:course_id(
+          id,
+          course_name
+        ),
+        batch:batch_id(
+          id,
+          batch_name,
+          course_id
+        )
+      `)
+        .order("created_at", { ascending: false });
 
-    batch:batch_id(
-      id,
-      batch_name
-    ),
+      if (error) {
+        console.error("FETCH STUDENTS ERROR:", error);
+        toast.error(error.message);
+        return [];
+      }
 
-    course:course_id(
-      id,
-      course_name
-    )
-  `);
+      return data || [];
 
-      if (error) throw error;
-
-      setStudents(data || []);
     } catch (err: any) {
-      toast.error(err.message);
+      console.error("FETCH STUDENTS ERROR:", err);
+
+      toast.error(
+        err?.message || "Failed to load students."
+      );
+
+      return [];
     }
   }, []);
 
@@ -127,37 +190,46 @@ const StudentFeeSection = ({
 
   const fetchStudentFees = useCallback(async () => {
     try {
+      const academicYear = getCurrentAcademicYear();
+
       const { data, error } = await supabase
         .from("Coaching-3_StudentFees")
         .select(`
     *,
 
- student:student_id(
-  id,
-  student_id,
-  name,
-  email,
-  mobile,
-  class,
-  batch_id,
-  course_id,
+    student:student_id(
+      id,
+      student_id,
+      name,
+      email,
+      mobile,
+      class,
+      batch_id,
+      course_id,
 
-  batch:batch_id(
-    id,
-    batch_name,
-    course_id
-  )
-),
+      batch:batch_id(
+        id,
+        batch_name,
+        course_id
+      )
+    ),
 
-course:course_id(
-  id,
-  course_name
-),
+    course:course_id(
+      id,
+      course_name
+    ),
 
-fee_structure:fee_structure_id(
-  *
-)
+    batch:batch_id(
+      id,
+      batch_name,
+      course_id
+    ),
+
+    fee_structure:fee_structure_id(
+      *
+    )
   `)
+        .eq("academic_year", academicYear)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -165,7 +237,70 @@ fee_structure:fee_structure_id(
       return data || [];
 
     } catch (err: any) {
-      toast.error(err.message || "Failed to load student fees.");
+      toast.error(
+        err.message || "Failed to load student fees."
+      );
+
+      return [];
+    }
+  }, []);
+
+
+  const fetchPreviousDues = useCallback(async () => {
+    try {
+      const currentAcademicYear = getCurrentAcademicYear();
+
+      const { data, error } = await supabase
+        .from("Coaching-3_StudentFees")
+        .select(`
+    *,
+
+    student:student_id(
+      id,
+      student_id,
+      name,
+      email,
+      mobile,
+      class,
+      batch_id,
+      course_id,
+
+      batch:batch_id(
+        id,
+        batch_name,
+        course_id
+      )
+    ),
+
+    course:course_id(
+      id,
+      course_name
+    ),
+
+    batch:batch_id(
+      id,
+      batch_name,
+      course_id
+    ),
+
+    fee_structure:fee_structure_id(
+      *
+    )
+  `)
+        .neq("academic_year", currentAcademicYear)
+        .gt("remaining_amount", 0)
+        .order("academic_year", {
+          ascending: false,
+        });
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (err: any) {
+      toast.error(
+        err.message || "Failed to load previous dues."
+      );
+
       return [];
     }
   }, []);
@@ -178,26 +313,40 @@ fee_structure:fee_structure_id(
       const [
         latestFees,
         latestTransactions,
+        latestFeeStructures,
+        latestStudents,
+        latestPreviousDues,
       ] = await Promise.all([
         fetchStudentFees(),
         fetchFeeTransactions(),
         fetchFeeStructures(),
         fetchStudents(),
+        fetchPreviousDues(),
       ]);
 
-      // Update table
-      setStudentFees(latestFees);
-      setFeeTransactions(latestTransactions);
+      // Update main data
+      setStudentFees(latestFees || []);
+      setFeeTransactions(latestTransactions || []);
+      setFeeStructures(latestFeeStructures || []);
+      setStudents(latestStudents || []);
+      setPreviousDues(latestPreviousDues || []);
 
-      // Agar drawer open hai to selected student bhi update karo
+      // Agar drawer open hai to selected fee bhi update karo
       if (selectedFee) {
-        const updatedFee = latestFees.find(
+        const updatedFee = (latestFees || []).find(
           (fee) => fee.id === selectedFee.id
         );
+
         if (updatedFee) {
           setSelectedFee(updatedFee);
         }
       }
+    } catch (error: any) {
+      console.error("Fees refresh error:", error);
+
+      toast.error(
+        error?.message || "Failed to refresh fee data."
+      );
     } finally {
       setLoading(false);
     }
@@ -206,12 +355,14 @@ fee_structure:fee_structure_id(
     fetchFeeTransactions,
     fetchFeeStructures,
     fetchStudents,
+    fetchPreviousDues,
+
   ]);
+
 
   useEffect(() => {
     refreshData();
   }, [refreshData]);
-
 
   const replaceStudentFee = useCallback(
     (updatedFee: StudentFeeData) => {
@@ -263,13 +414,75 @@ fee_structure:fee_structure_id(
   };
 
 
-  const assignedIds = new Set(
-    studentFees.map((fee) => fee.student_id)
-  );
+  const assignedIds = useMemo(() => {
+    return new Set(
+      studentFees
+        .filter((fee) => fee.student_id)
+        .map((fee) => String(fee.student_id))
+    );
+  }, [studentFees]);
 
-  const unassignedStudents = students.filter(
-    (student) => !assignedIds.has(student.id)
-  );
+  const unassignedStudents = useMemo(() => {
+    return students.filter(
+      (student) =>
+        student.id &&
+        !assignedIds.has(String(student.id))
+    );
+  }, [students, assignedIds]);
+
+
+  const filteredUnassignedStudents = useMemo(() => {
+    return unassignedStudents.filter((student) => {
+      // --------------------
+      // Search Filter
+      // --------------------
+      const query = searchQuery.trim().toLowerCase();
+
+      if (query) {
+        const searchable = [
+          student.name,
+          student.student_id,
+          student.mobile,
+          student.course?.course_name,
+          student.batch?.batch_name,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        if (!searchable.includes(query)) {
+          return false;
+        }
+      }
+
+      // --------------------
+      // Course Filter
+      // --------------------
+      if (
+        selectedCourse !== "all" &&
+        student.course_id !== selectedCourse
+      ) {
+        return false;
+      }
+
+      // --------------------
+      // Batch Filter
+      // --------------------
+      if (
+        selectedBatch !== "all" &&
+        student.batch_id !== selectedBatch
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [
+    unassignedStudents,
+    searchQuery,
+    selectedCourse,
+    selectedBatch,
+  ]);
 
 
   const assignedCount = studentFees.length;
@@ -294,54 +507,99 @@ fee_structure:fee_structure_id(
 
 
 
-  const filteredStudentFees = (() => {
-    switch (filter) {
-      case "assigned":
-        return studentFees;
+  const filteredStudentFees = studentFees.filter((fee) => {
+    // --------------------
+    // Status Filter
+    // --------------------
 
-      case "overdue":
-        return studentFees.filter(
-          (fee) => fee.status === "Overdue"
-        );
+    if (filter === "overdue" && fee.status !== "Overdue")
+      return false;
 
-      case "partial":
-        return studentFees.filter(
-          (fee) => fee.status === "Partial"
-        );
+    if (filter === "partial" && fee.status !== "Partial")
+      return false;
 
-      case "pending":
-        return studentFees.filter(
-          (fee) => fee.status === "Pending"
-        );
+    if (filter === "pending" && fee.status !== "Pending")
+      return false;
 
-      default:
-        return studentFees;
+    // --------------------
+    // Search Filter
+    // --------------------
+
+    const query = searchQuery.trim().toLowerCase();
+
+    if (query) {
+      const searchable = [
+        fee.student?.name,
+        fee.student?.student_id,
+        fee.student?.mobile,
+        fee.course?.course_name,
+        fee.student?.batch?.batch_name,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (!searchable.includes(query))
+        return false;
     }
-  })();
+
+    // --------------------
+    // Course Filter
+    // --------------------
+
+    if (
+      selectedCourse !== "all" &&
+      fee.course_id !== selectedCourse
+    ) {
+      return false;
+    }
+
+    // --------------------
+    // Batch Filter
+    // --------------------
+
+    if (
+      selectedBatch !== "all" &&
+      fee.student?.batch_id !== selectedBatch
+    ) {
+      return false;
+    }
+
+    return true;
+  });
 
 
-  const courses = [
-    ...new Map(
-      studentFees
-        .filter((f) => f.course)
-        .map((f) => [
-          f.course.id,
-          f.course,
-        ])
-    ).values(),
-  ];
+  const courses = useMemo(() => {
+    return [
+      ...new Map(
+        students
+          .filter((student) => student.course)
+          .map((student) => [
+            student.course.id,
+            student.course,
+          ])
+      ).values(),
+    ];
+  }, [students]);
 
-  const batches = [
-    ...new Map(
-      studentFees
-        .filter((f) => f.student?.batch)
-        .map((f) => [
-          f.student.batch.id,
-          f.student.batch,
-        ])
-    ).values(),
-  ];
-  console.log("Batches:", batches);
+  const batches = useMemo(() => {
+    return [
+      ...new Map(
+        students
+          .filter((student) => student.batch)
+          .map((student) => [
+            student.batch.id,
+            student.batch,
+          ])
+      ).values(),
+    ];
+  }, [students]);
+
+
+  useEffect(() => {
+    onCoursesChange(courses);
+    onBatchesChange(batches);
+  }, [courses, batches, onCoursesChange, onBatchesChange]);
 
 
   const mapFee = (fee: StudentFeeData) => ({
@@ -661,45 +919,45 @@ fee_structure:fee_structure_id(
         });
       }
 
-// Batch Filter
-if (batchId && batchId !== "all") {
-  historyData = historyData.filter((transaction) => {
-    const fee = studentFees.find(
-      (f) => f.id === transaction.student_fee_id
-    );
-    return fee?.student?.batch_id === batchId;
-  });
-}
+      // Batch Filter
+      if (batchId && batchId !== "all") {
+        historyData = historyData.filter((transaction) => {
+          const fee = studentFees.find(
+            (f) => f.id === transaction.student_fee_id
+          );
+          return fee?.student?.batch_id === batchId;
+        });
+      }
 
 
-    // Student Filter
-if (studentId && studentId !== "all") {
-  historyData = historyData.filter((transaction) => {
-    const fee = studentFees.find(
-      (f) => f.id === transaction.student_fee_id
-    );
-    return (
-      String(fee?.student?.id) ===
-      String(studentId)
-    );
-  });
-}
+      // Student Filter
+      if (studentId && studentId !== "all") {
+        historyData = historyData.filter((transaction) => {
+          const fee = studentFees.find(
+            (f) => f.id === transaction.student_fee_id
+          );
+          return (
+            String(fee?.student?.id) ===
+            String(studentId)
+          );
+        });
+      }
 
-// From Date
-if (fromDate) {
-  historyData = historyData.filter(
-    (transaction) =>
-      transaction.transaction_date >= fromDate
-  );
-}
+      // From Date
+      if (fromDate) {
+        historyData = historyData.filter(
+          (transaction) =>
+            transaction.transaction_date >= fromDate
+        );
+      }
 
-// To Date
-if (toDate) {
-  historyData = historyData.filter(
-    (transaction) =>
-      transaction.transaction_date <= toDate
-  );
-}
+      // To Date
+      if (toDate) {
+        historyData = historyData.filter(
+          (transaction) =>
+            transaction.transaction_date <= toDate
+        );
+      }
 
       if (!historyData.length) {
         toast.error("No payment history found.");
@@ -722,7 +980,7 @@ if (toDate) {
       return;
     }
 
-    
+
 
     const sheets: any[] = [];
     // Main sheet
@@ -805,434 +1063,716 @@ if (toDate) {
 
 
 
-const printFees = (
-  reportType: string,
-  courseId?: string,
-  batchId?: string,
-  studentId?: string,
-  fromDate?: string,
-  toDate?: string
-) => {
+  const printFees = (
+    reportType: string,
+    courseId?: string,
+    batchId?: string,
+    studentId?: string,
+    fromDate?: string,
+    toDate?: string
+  ) => {
 
-let exportData = [...filteredStudentFees];
-let collectionData = [...feeTransactions];
+    let exportData = [...filteredStudentFees];
+    let collectionData = [...feeTransactions];
 
-let historyData = [...feeTransactions];
+    let historyData = [...feeTransactions];
 
-switch (reportType) {
+    switch (reportType) {
 
-  case "current":
-    exportData = filteredStudentFees;
-    break;
+      case "current":
+        exportData = filteredStudentFees;
+        break;
 
-  case "complete":
-    exportData = [...studentFees];
-    break;
+      case "complete":
+        exportData = [...studentFees];
+        break;
 
-  default:
-    exportData = [...studentFees];
-}
+      default:
+        exportData = [...studentFees];
+    }
 
 
-  if (reportType === "current") {
+    if (reportType === "current") {
 
-    const rows = filteredStudentFees.map(mapFee);
+      const rows = filteredStudentFees.map(mapFee);
 
-    if (!rows.length) {
-      toast.error("No records found.");
+      if (!rows.length) {
+        toast.error("No records found.");
+        return;
+      }
+
+      printTable(
+        "Current Fees Report",
+        Object.keys(rows[0]),
+        rows
+
+
+      );
       return;
     }
 
-    printTable(
-      "Current Fees Report",
-      Object.keys(rows[0]),
-      rows
+    if (reportType === "complete") {
 
-      
-    );
-    return;
-  }
+      const rows = exportData.map(mapFee);
 
-if (reportType === "complete") {
-
-  const rows = exportData.map(mapFee);
-
-  if (!rows.length) {
-    toast.error("No records found.");
-    return;
-  }
-  printTable(
-    "Complete Fees Report",
-    Object.keys(rows[0]),
-    rows
-  );
-  return;
-}
-
-
-if (reportType === "course") {
-
-  let rows = studentFees
-    .filter((fee) => {
-
-      const courseMatch =
-        courseId === "all" ||
-        fee.course_id === courseId;
-
-      const date =
-        fee.admission_date || "";
-
-      const fromMatch =
-        !fromDate ||
-        date >= fromDate;
-
-      const toMatch =
-        !toDate ||
-        date <= toDate;
-
-      return (
-        courseMatch &&
-        fromMatch &&
-        toMatch
+      if (!rows.length) {
+        toast.error("No records found.");
+        return;
+      }
+      printTable(
+        "Complete Fees Report",
+        Object.keys(rows[0]),
+        rows
       );
-    })
-    .map(mapFee);
-
-  if (!rows.length) {
-    toast.error("No records found.");
-    return;
-  }
-
-  printTable(
-    "Course Report",
-    Object.keys(rows[0]),
-    rows
-  );
-
-  return;
-}
+      return;
+    }
 
 
-if (reportType === "batch") {
+    if (reportType === "course") {
 
-  let rows = studentFees
-    .filter((fee) => {
+      let rows = studentFees
+        .filter((fee) => {
 
-      if (
-        courseId &&
-        courseId !== "all" &&
-        fee.course_id !== courseId
-      ) {
-        return false;
+          const courseMatch =
+            courseId === "all" ||
+            fee.course_id === courseId;
+
+          const date =
+            fee.admission_date || "";
+
+          const fromMatch =
+            !fromDate ||
+            date >= fromDate;
+
+          const toMatch =
+            !toDate ||
+            date <= toDate;
+
+          return (
+            courseMatch &&
+            fromMatch &&
+            toMatch
+          );
+        })
+        .map(mapFee);
+
+      if (!rows.length) {
+        toast.error("No records found.");
+        return;
       }
 
-      if (
-        batchId &&
-        batchId !== "all" &&
-        fee.student?.batch_id !== batchId
-      ) {
-        return false;
+      printTable(
+        "Course Report",
+        Object.keys(rows[0]),
+        rows
+      );
+
+      return;
+    }
+
+
+    if (reportType === "batch") {
+
+      let rows = studentFees
+        .filter((fee) => {
+
+          if (
+            courseId &&
+            courseId !== "all" &&
+            fee.course_id !== courseId
+          ) {
+            return false;
+          }
+
+          if (
+            batchId &&
+            batchId !== "all" &&
+            fee.student?.batch_id !== batchId
+          ) {
+            return false;
+          }
+
+          if (!fee.created_at) return false;
+
+          const feeDate =
+            fee.created_at.split("T")[0];
+
+          if (fromDate && feeDate < fromDate)
+            return false;
+
+          if (toDate && feeDate > toDate)
+            return false;
+
+          return true;
+
+        })
+        .map(mapFee);
+
+      if (!rows.length) {
+        toast.error("No records found.");
+        return;
       }
 
-      if (!fee.created_at) return false;
+      printTable(
+        "Batch Report",
+        Object.keys(rows[0]),
+        rows
+      );
 
-      const feeDate =
-        fee.created_at.split("T")[0];
-
-      if (fromDate && feeDate < fromDate)
-        return false;
-
-      if (toDate && feeDate > toDate)
-        return false;
-
-      return true;
-
-    })
-    .map(mapFee);
-
-  if (!rows.length) {
-    toast.error("No records found.");
-    return;
-  }
-
-  printTable(
-    "Batch Report",
-    Object.keys(rows[0]),
-    rows
-  );
-
-  return;
-}
+      return;
+    }
 
 
-if (reportType === "pending") {
+    if (reportType === "pending") {
 
-  const rows = studentFees
-    .filter(
-      fee => fee.status === "Pending"
+      const rows = studentFees
+        .filter(
+          fee => fee.status === "Pending"
+        )
+        .map(mapFee);
+
+      if (!rows.length) {
+        toast.error("No records found.");
+        return;
+      }
+
+      printTable(
+        "Pending Fees Report",
+        Object.keys(rows[0]),
+        rows
+      );
+
+      return;
+    }
+
+
+    if (reportType === "paid") {
+
+      let rows = studentFees
+        .filter((fee) => {
+
+          if (fee.status !== "Paid")
+            return false;
+
+          if (
+            courseId &&
+            courseId !== "all" &&
+            fee.course_id !== courseId
+          ) {
+            return false;
+          }
+
+          if (
+            batchId &&
+            batchId !== "all" &&
+            fee.student?.batch_id !== batchId
+          ) {
+            return false;
+          }
+
+          if (!fee.created_at) return false;
+
+          const feeDate =
+            fee.created_at.split("T")[0];
+
+          if (fromDate && feeDate < fromDate)
+            return false;
+
+          if (toDate && feeDate > toDate)
+            return false;
+
+          return true;
+
+        })
+        .map(mapFee);
+
+      if (!rows.length) {
+        toast.error("No records found.");
+        return;
+      }
+
+      printTable(
+        "Paid Fees Report",
+        Object.keys(rows[0]),
+        rows
+      );
+
+      return;
+    }
+
+
+    if (reportType === "collection") {
+
+      let rows = collectionData
+        .map(mapTransaction);
+
+      if (!rows.length) {
+        toast.error("No records found.");
+        return;
+      }
+
+      printTable(
+        "Collection Report",
+        Object.keys(rows[0]),
+        rows
+      );
+
+      return;
+    }
+
+
+    if (reportType === "history") {
+
+      let rows = historyData
+        .map(mapTransaction);
+
+      if (!rows.length) {
+        toast.error("No payment history found.");
+        return;
+      }
+
+      printTable(
+        "Payment History",
+        Object.keys(rows[0]),
+        rows
+      );
+
+      return;
+    }
+
+  };
+
+
+
+  const handleRecentTransactionPrint = async (
+    transaction: FeeTransaction
+  ) => {
+    try {
+      if (!transaction.student_fee_id) {
+        toast.error("Fee record not found for this transaction.");
+        return;
+      }
+
+      // Fetch the COMPLETE fee record
+      const { data: fee, error } = await supabase
+        .from("Coaching-3_StudentFees")
+        .select(`
+    *,
+
+    student:student_id(
+      id,
+      student_id,
+      name,
+      email,
+      mobile,
+      class
+    ),
+
+    course:course_id(
+      id,
+      course_name
+    ),
+
+    batch:batch_id(
+      id,
+      batch_name,
+      course_id
+    ),
+
+    fee_structure:fee_structure_id(
+      *
     )
-    .map(mapFee);
+  `)
+        .eq("id", transaction.student_fee_id)
+        .single();
 
-  if (!rows.length) {
-    toast.error("No records found.");
-    return;
-  }
-
-  printTable(
-    "Pending Fees Report",
-    Object.keys(rows[0]),
-    rows
-  );
-
-  return;
-}
-
-
-if (reportType === "paid") {
-
-  let rows = studentFees
-    .filter((fee) => {
-
-      if (fee.status !== "Paid")
-        return false;
-
-      if (
-        courseId &&
-        courseId !== "all" &&
-        fee.course_id !== courseId
-      ) {
-        return false;
+      if (error) {
+        console.error("Receipt fee fetch error:", error);
+        toast.error("Unable to load fee details for receipt.");
+        return;
       }
 
-      if (
-        batchId &&
-        batchId !== "all" &&
-        fee.student?.batch_id !== batchId
-      ) {
-        return false;
+      if (!fee) {
+        toast.error("Fee record not found.");
+        return;
       }
 
-      if (!fee.created_at) return false;
+      const payment: PaymentHistory = {
+        id: transaction.id,
 
-      const feeDate =
-        fee.created_at.split("T")[0];
+        student_fee_id: transaction.student_fee_id,
 
-      if (fromDate && feeDate < fromDate)
-        return false;
+        student_id: fee.student_id,
 
-      if (toDate && feeDate > toDate)
-        return false;
+        amount: transaction.amount,
 
-      return true;
+        payment_mode:
+          transaction.payment_mode as PaymentHistory["payment_mode"],
 
-    })
-    .map(mapFee);
+        transaction_date: transaction.transaction_date,
 
-  if (!rows.length) {
-    toast.error("No records found.");
-    return;
-  }
+        transaction_id: transaction.transaction_id,
 
-  printTable(
-    "Paid Fees Report",
-    Object.keys(rows[0]),
-    rows
-  );
+        receipt_no: transaction.receipt_no,
 
-  return;
-}
+        received_by: transaction.received_by,
+
+        fee_period_from: transaction.fee_period_from,
+
+        fee_period_to: transaction.fee_period_to,
+
+        remark: transaction.remark,
+
+        created_at: transaction.created_at,
+
+        months_covered:
+          transaction.months_covered ?? 1,
+
+        is_manual_override:
+          transaction.is_manual_override ?? false,
+      };
+
+      const receipt = generateReceiptData(
+        payment,
+        fee as StudentFeeData
+      );
+
+      setRecentReceipt(receipt);
+      setRecentReceiptOpen(true);
+
+    } catch (error) {
+      console.error(
+        "Recent transaction receipt error:",
+        error
+      );
+
+      toast.error(
+        "Failed to prepare receipt."
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Top Bar Action (Export Button) */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight">
+            Student Fee Management
+          </h2>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Monitor collections, manage student ledgers, and export financial audit logs.
+          </p>
+        </div>
 
 
-if (reportType === "collection") {
+        {true && (
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-50 border border-amber-200">
+            <div>
+              <p className="text-sm font-bold text-amber-900">
+                Previous Dues
+              </p>
 
-  let rows = collectionData
-    .map(mapTransaction);
+              <p className="text-xs text-amber-700">
+                {previousDues.length} previous fee record
+                {previousDues.length > 1 ? "s" : ""} have
+                outstanding amounts.
+              </p>
+            </div>
 
-  if (!rows.length) {
-    toast.error("No records found.");
-    return;
-  }
-
-  printTable(
-    "Collection Report",
-    Object.keys(rows[0]),
-    rows
-  );
-
-  return;
-}
-
-
-if (reportType === "history") {
-
-  let rows = historyData
-    .map(mapTransaction);
-
-  if (!rows.length) {
-    toast.error("No payment history found.");
-    return;
-  }
-
-  printTable(
-    "Payment History",
-    Object.keys(rows[0]),
-    rows
-  );
-
-  return;
-}
-
-};
-
-return (
-  <div className="space-y-8 animate-in fade-in duration-300">
-    {/* Top Bar Action (Export Button) */}
-    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-      <div>
-        <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight">
-          Student Fee Management
-        </h2>
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-          Monitor collections, manage student ledgers, and export financial audit logs.
-        </p>
-      </div>
-
-      <Button
-        onClick={() => setIsExportModalOpen(true)}
-        className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
-      >
-        <FileSpreadsheet className="h-4 w-4 stroke-[2.2]" />
-        <span>Export Report</span>
-      </Button>
-    </div>
-
-    {/* Analytics Dashboard Component */}
-    <FeeAnalyticsDashboard
-      studentFees={studentFees}
-      feeTransactions={feeTransactions}
-    />
-
-    {/* Student Fee Filters */}
-    <StudentFeeFilters
-      filter={filter}
-      onFilterChange={setFilter}
-      totalCount={totalCount}
-      assignedCount={assignedCount}
-      unassignedCount={unassignedCount}
-      pendingCount={pendingCount}
-      overdueCount={overdueCount}
-      partialCount={partialCount}
-    />
-
-    {/* Main Assigned Student Fee Table */}
-    {filter !== "unassigned" && (
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden p-1">
-        <StudentFeeTable
-          items={filteredStudentFees}
-          loading={loading}
-          onEdit={(fee) => {
-            setSelectedFee(fee);
-            setDrawerOpen(true);
-          }}
-          onCollect={(fee) => {
-            setSelectedFee(fee);
-            setPaymentDrawerOpen(true);
-          }}
-          onDelete={() => {}}
-        />
-      </div>
-    )}
-
-    {/* Unassigned Students Section */}
-    {(filter === "all" || filter === "unassigned") && (
-      <div className="space-y-3 pt-2">
-        {filter === "all" && (
-          <div>
-        
+            <Button
+              onClick={() => setPreviousDuesOpen(true)}
+              variant="outline"
+              className="rounded-xl border-amber-300 text-amber-800 hover:bg-amber-100"
+            >
+              View Previous Dues
+            </Button>
           </div>
         )}
+
+
+        {previousDuesOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="w-full max-w-5xl max-h-[85vh] overflow-hidden rounded-3xl bg-white shadow-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-slate-200">
+
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">
+                    Previous Year Dues
+                  </h2>
+
+                  <p className="text-sm text-slate-500 mt-1">
+                    Outstanding fees from previous academic years
+                  </p>
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setPreviousDuesOpen(false)}
+                  className="rounded-xl"
+                >
+                  Close
+                </Button>
+
+              </div>
+
+              {/* Body */}
+              <div className="max-h-[65vh] overflow-y-auto p-6">
+
+                {previousDues.length === 0 ? (
+
+                  <div className="py-16 text-center">
+                    <p className="text-sm font-semibold text-slate-500">
+                      No previous dues found.
+                    </p>
+                  </div>
+
+                ) : (
+
+                  <div className="space-y-3">
+
+                    {previousDues.map((due) => (
+
+                      <div
+                        key={due.id}
+                        className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5"
+                      >
+
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
+                          <div>
+                            <p className="font-extrabold text-slate-900">
+                              {due.student?.name}
+                            </p>
+
+                            <p className="text-xs text-slate-500 mt-1">
+                              Course: {due.course?.course_name || "-"}
+                            </p>
+
+                            <p className="text-xs text-slate-500">
+                              Batch: {due.batch?.batch_name || "-"}
+                            </p>
+
+                            <p className="text-xs text-slate-500">
+                              Academic Year: {due.academic_year}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                              Remaining Due
+                            </p>
+
+                            <p className="text-xl font-extrabold text-red-600">
+                              ₹{Number(due.remaining_amount).toLocaleString("en-IN")}
+                            </p>
+                          </div>
+
+                          <Button
+                            onClick={() => {
+                              setSelectedFee(due);
+                              setPaymentDrawerOpen(true);
+                              setPreviousDuesOpen(false);
+                            }}
+                            className="rounded-xl bg-blue-600 hover:bg-blue-700"
+                          >
+                            Collect Payment
+                          </Button>
+
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+
+
+        <Button
+          onClick={() => setIsExportModalOpen(true)}
+          className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+        >
+          <FileSpreadsheet className="h-4 w-4 stroke-[2.2]" />
+          <span>Export Report</span>
+        </Button>
+      </div>
+
+      {/* Analytics Dashboard Component */}
+      <FeeAnalyticsDashboard
+        studentFees={studentFees}
+        feeTransactions={feeTransactions}
+        onPrintReceipt={handleRecentTransactionPrint}
+      />
+
+
+
+      {/* Student Fee Filters */}
+      <StudentFeeFilters
+        filter={filter}
+        onFilterChange={setFilter}
+        totalCount={totalCount}
+        assignedCount={assignedCount}
+        unassignedCount={unassignedCount}
+        pendingCount={pendingCount}
+        overdueCount={overdueCount}
+        partialCount={partialCount}
+      />
+
+
+      {/* Main Assigned Student Fee Table */}
+      {filter !== "unassigned" && (
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden p-1">
-          <UnassignedStudentTable
-            items={unassignedStudents}
+          <StudentFeeTable
+            items={filteredStudentFees}
             loading={loading}
-            onAssignFee={(student) => {
-              setSelectedStudent(student);
-              setAssignDrawerOpen(true);
+            onEdit={(fee) => {
+              setSelectedFee(fee);
+              setDrawerOpen(true);
             }}
+            onCollect={(fee) => {
+              setSelectedFee(fee);
+              setPaymentDrawerOpen(true);
+            }}
+            onDelete={() => { }}
           />
         </div>
-      </div>
-    )}
+      )}
 
-    {/* Student Fee Edit Drawer */}
-    <StudentFeeDrawer
-      isOpen={drawerOpen}
-      onClose={() => {
-        setDrawerOpen(false);
-        setSelectedFee(null);
-        setSelectedStudent(null);
-      }}
-      studentFee={selectedFee}
-      feeStructures={feeStructures}
-      onSave={handleSaveFee}
-      onDataChanged={async () => {
-        await refreshData();
-      }}
-    />
+      {/* Unassigned Students Section */}
+      {(filter === "all" || filter === "unassigned") && (
+        <div className="space-y-3 pt-2">
+          {filter === "all" && (
+            <div>
 
-    {/* Assign Fee Drawer */}
-    <AssignFeeDrawer
-      isOpen={assignDrawerOpen}
-      onClose={() => {
-        setAssignDrawerOpen(false);
-        setSelectedStudent(null);
-      }}
-      student={selectedStudent}
-      onAssigned={async () => {
-        await refreshData();
-        setAssignDrawerOpen(false);
-        setSelectedStudent(null);
-      }}
-    />
+            </div>
+          )}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden p-1">
+            <UnassignedStudentTable
+              items={filteredUnassignedStudents}
+              loading={loading}
 
-    {/* Payment Collection Drawer */}
-    <CollectPaymentDrawer
-      isOpen={paymentDrawerOpen}
-      onClose={() => {
-        setPaymentDrawerOpen(false);
-        setSelectedFee(null);
-      }}
-      studentFee={selectedFee}
-      onPaymentSuccess={async () => {
-        await refreshData();
-      }}
-    />
+              selectedStudents={selectedUnassignedStudents}
+              onSelectionChange={setSelectedUnassignedStudents}
 
-    {/* Export Modal */}
-    <ExportFeesModal
-      open={isExportModalOpen}
-      onClose={() => setIsExportModalOpen(false)}
-      courses={courses}
-      batches={batches}
-      students={
-        [
-          ...new Map(
-            feeTransactions
-              .map((transaction) => {
-                const fee = studentFees.find(
-                  (f) => f.id === transaction.student_fee_id
-                );
-                return fee?.student;
-              })
-              .filter(Boolean)
-              .map((student) => [student!.id, student])
-          ).values(),
-        ]
-      }
-      onExportExcel={exportFees}
-      onPrint={printFees}
-    />
-  </div>
-);}
+              onAssignFee={(student) => {
+                setSelectedStudent(student);
+                setAssignDrawerOpen(true);
+              }}
+
+              onBulkAssignFee={() => {
+                setBulkAssignFeeOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Student Fee Edit Drawer */}
+      <StudentFeeDrawer
+        isOpen={drawerOpen}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSelectedFee(null);
+          setSelectedStudent(null);
+        }}
+        studentFee={selectedFee}
+        feeStructures={feeStructures}
+        onSave={handleSaveFee}
+        onDataChanged={async () => {
+          await refreshData();
+        }}
+      />
+
+      {/* Assign Fee Drawer */}
+      <AssignFeeDrawer
+        isOpen={assignDrawerOpen}
+        onClose={() => {
+          setAssignDrawerOpen(false);
+          setSelectedStudent(null);
+        }}
+        student={selectedStudent}
+        onAssigned={async () => {
+          await refreshData();
+          setAssignDrawerOpen(false);
+          setSelectedStudent(null);
+        }}
+      />
+
+      <BulkAssignFeeDrawer
+        isOpen={bulkAssignFeeOpen}
+        onClose={() => {
+          setBulkAssignFeeOpen(false);
+        }}
+        students={filteredUnassignedStudents.filter((student) =>
+          selectedUnassignedStudents.includes(String(student.id))
+        )}
+        onAssigned={async () => {
+          await refreshData();
+
+          setSelectedUnassignedStudents([]);
+          setBulkAssignFeeOpen(false);
+        }}
+      />
+
+      {/* Payment Collection Drawer */}
+      <CollectPaymentDrawer
+        isOpen={paymentDrawerOpen}
+        onClose={() => {
+          setPaymentDrawerOpen(false);
+          setSelectedFee(null);
+        }}
+        studentFee={selectedFee}
+        onPaymentSuccess={async () => {
+          await refreshData();
+        }}
+      />
+
+      <ReceiptPreviewDialog
+        open={recentReceiptOpen}
+        receipt={recentReceipt}
+        onClose={() => {
+          setRecentReceiptOpen(false);
+          setRecentReceipt(null);
+        }}
+        onPrint={() => {
+          window.print();
+        }}
+      />
+
+      {/* Export Modal */}
+      <ExportFeesModal
+        open={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        courses={courses}
+        batches={batches}
+        students={
+          [
+            ...new Map(
+              feeTransactions
+                .map((transaction) => {
+                  const fee = studentFees.find(
+                    (f) => f.id === transaction.student_fee_id
+                  );
+                  return fee?.student;
+                })
+                .filter(Boolean)
+                .map((student) => [student!.id, student])
+            ).values(),
+          ]
+        }
+        onExportExcel={exportFees}
+        onPrint={printFees}
+      />
+    </div>
+  );
+}
 
 export default StudentFeeSection

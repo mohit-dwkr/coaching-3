@@ -63,7 +63,7 @@ return (
           Batch
         </span>
         <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-          {studentFee.student?.batch?.batch_name || "N/A"}
+         {studentFee.batch?.batch_name || "N/A"}
         </p>
       </div>
 

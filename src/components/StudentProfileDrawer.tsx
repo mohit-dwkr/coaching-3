@@ -225,7 +225,7 @@ return (
                       Batch Assigned
                     </p>
                     <p className="text-sm font-bold text-slate-100 mt-1">
-                      {profile?.batch_relation?.batch_name || "-"}
+                      {profile?.batch?.batch_name || "-"}
                     </p>
                   </div>
 

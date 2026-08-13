@@ -4,6 +4,10 @@ import { supabase } from "@/supabaseClient";
 import AssignBatchDrawer from "./AssignBatchDrawer";
 import AssignFeeDrawer from "../fees/AssignFeeDrawer";
 import { updateBatchStudentCount } from "@/utils/batchUtils";
+import {
+    getCurrentAcademicYear,
+    getAcademicYearFromDate,
+} from "@/utils/academicYear";
 import { toast } from "sonner";
 import {
     X,
@@ -84,7 +88,9 @@ export default function StudentDrawer({
 
     const saveStudentChanges = async () => {
 
-        // Validation
+        // ============================
+        // VALIDATION
+        // ============================
 
         if (!editName.trim()) {
             toast.error("Student name is required.");
@@ -107,7 +113,6 @@ export default function StudentDrawer({
             editName.trim() !== (student.name || "") ||
             editMobile.trim() !== (student.mobile || "");
 
-
         if (!courseChanged && !detailsChanged) {
             toast.info("No changes detected.");
             setIsEditMode(false);
@@ -115,21 +120,151 @@ export default function StudentDrawer({
         }
 
         try {
+
             // ============================
-            // Update Student Table
+            // COURSE CHANGE CHECK
+            // ============================
+
+            let currentYearFee: any = null;
+
+            if (courseChanged) {
+                const academicYear = getCurrentAcademicYear();
+
+                // ============================
+                // ATTENDANCE CHECK
+                // ============================
+
+                const {
+                    data: attendanceRecords,
+                    error: attendanceError,
+                } = await supabase
+                    .from("Coaching-3_AttendanceRecords")
+                    .select(`
+            session:Coaching-3_AttendanceSessions!attendance_records_session_fk(
+                attendance_date
+            )
+        `)
+                    .eq("student_id", student.id);
+
+                if (attendanceError) {
+                    console.error(
+                        "Course change attendance check error:",
+                        attendanceError
+                    );
+
+                    toast.error(
+                        "Unable to verify current academic year attendance."
+                    );
+
+                    return;
+                }
+
+                const hasCurrentYearAttendance =
+                    attendanceRecords?.some((record: any) => {
+                        const attendanceDate =
+                            record.session?.attendance_date;
+
+                        if (!attendanceDate) return false;
+
+                        return (
+                            getAcademicYearFromDate(attendanceDate) ===
+                            academicYear
+                        );
+                    }) ?? false;
+
+                if (hasCurrentYearAttendance) {
+                    toast.error(
+                        "Course change is not allowed because attendance has already been recorded for the current academic year."
+                    );
+
+                    return;
+                }
+
+                // ============================
+                // FEE CHECK
+                // ============================
+
+                const { data: fee, error: feeError } = await supabase
+                    .from("Coaching-3_StudentFees")
+                    .select(`
+            id,
+            paid_amount,
+            remaining_amount,
+            academic_year
+        `)
+                    .eq("student_id", student.id)
+                    .eq("academic_year", academicYear)
+                    .maybeSingle();
+
+                if (feeError) {
+                    console.error(
+                        "Course change fee check error:",
+                        feeError
+                    );
+
+                    toast.error(
+                        "Unable to verify current academic year fee."
+                    );
+
+                    return;
+                }
+
+                currentYearFee = fee;
+
+                // ============================
+                // PAYMENT RECEIVED → BLOCK
+                // ============================
+
+                if (
+                    currentYearFee &&
+                    Number(currentYearFee.paid_amount) > 0
+                ) {
+                    toast.error(
+                        "Course change is not allowed because payment has already been received for the current academic year."
+                    );
+
+                    return;
+                }
+
+                // ============================
+                // UNPAID FEE → REMOVE
+                // ============================
+
+                if (currentYearFee) {
+                    const { error: deleteFeeError } = await supabase
+                        .from("Coaching-3_StudentFees")
+                        .delete()
+                        .eq("id", currentYearFee.id);
+
+                    if (deleteFeeError) {
+                        console.error(
+                            "Old fee removal error:",
+                            deleteFeeError
+                        );
+
+                        toast.error(
+                            "Unable to remove old fee assignment."
+                        );
+
+                        return;
+                    }
+                }
+            }
+
+            // ============================
+            // UPDATE STUDENT
             // ============================
 
             const updateData: any = {
                 name: editName.trim(),
                 mobile: editMobile.trim(),
-
                 course_id: selectedCourse,
-
                 updated_at: new Date().toISOString(),
             };
 
-            // Sirf course change hone par batch aur roll reset karo
+            // Course changed
             if (courseChanged) {
+
                 updateData.batch_id = null;
                 updateData.batch = "Not Assigned";
                 updateData.roll_number = null;
@@ -140,11 +275,12 @@ export default function StudentDrawer({
                 .update(updateData)
                 .eq("id", student.id);
 
-            if (studentError) throw studentError;
-
+            if (studentError) {
+                throw studentError;
+            }
 
             // ============================
-            // Update Approval Table
+            // UPDATE APPROVAL TABLE
             // ============================
 
             const { error: approvalError } = await supabase
@@ -153,14 +289,18 @@ export default function StudentDrawer({
                     name: editName.trim(),
                     mobile: editMobile.trim(),
                     email: editEmail.trim(),
-
                     course_id: selectedCourse,
-
                     updated_at: new Date().toISOString(),
                 })
                 .eq("user_id", student.user_id);
 
-            if (approvalError) throw approvalError;
+            if (approvalError) {
+                throw approvalError;
+            }
+
+            // ============================
+            // UPDATE BATCH COUNT
+            // ============================
 
             if (student.batch_id) {
                 await updateBatchStudentCount(student.batch_id);
@@ -168,19 +308,34 @@ export default function StudentDrawer({
 
             await onBatchAssigned();
 
+            // ============================
+            // SUCCESS
+            // ============================
+
             if (courseChanged) {
-                toast.success("Student details and course updated.");
+
+                toast.success(
+                    "Course changed successfully. Please assign the new course fee."
+                );
+
             } else {
-                toast.success("Student details updated.");
+
+                toast.success(
+                    "Student details updated."
+                );
             }
 
             setIsEditMode(false);
 
         } catch (err: any) {
-            toast.error(err.message);
+
+            console.error(err);
+
+            toast.error(
+                err.message || "Failed to update student."
+            );
         }
     };
-
 
     return (
         <>
@@ -396,7 +551,7 @@ export default function StudentDrawer({
                                             Batch
                                         </label>
                                         <p className="text-sm font-extrabold text-slate-900 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
-                                            {student.batch_relation?.batch_name || "Unassigned"}
+                                            {student.batch?.batch_name || "Unassigned"}
                                         </p>
                                     </div>
                                 </div>

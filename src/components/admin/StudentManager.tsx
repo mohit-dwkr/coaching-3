@@ -104,7 +104,7 @@ const StudentManager = () => {
         id,
         course_name
       ),
-      batch_relation:batch_id (
+      batch:batch_id (
         id,
         batch_name
       )
@@ -493,7 +493,7 @@ const StudentManager = () => {
       s.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.course?.course_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.batch_relation?.batch_name
+      s.batch?.batch_name
         ?.toLowerCase()
         ?.includes(searchTerm.toLowerCase())
 
@@ -531,7 +531,7 @@ const StudentManager = () => {
       s.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.course?.course_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.batch_relation?.batch_name
+      s.batch?.batch_name
         ?.toLowerCase()
         ?.includes(searchTerm.toLowerCase())
 
@@ -549,7 +549,7 @@ const StudentManager = () => {
     "Mobile": student.mobile,
     "Email": student.email,
     "Course": student.course?.course_name || "",
-    "Batch": student.batch_relation?.batch_name || "Not Assigned",
+    "Batch": student.batch?.batch_name || "Not Assigned",
     "Status": student.status,
     "Notes Access": student.notes_access ? "Enabled" : "Disabled",
     "Joined Date": student.joined_at || "",
@@ -649,7 +649,7 @@ const StudentManager = () => {
         (s) =>
           s.status !== "active" ||
           !s.notes_access ||
-          !s.batch_relation
+          !s.batch
       );
     }
     if (!exportData.length) {
@@ -689,7 +689,7 @@ const StudentManager = () => {
       ...new Set(
         exportData.map(
           s =>
-            s.batch_relation?.batch_name
+            s.batch?.batch_name
         )
       ),
     ];
@@ -700,7 +700,7 @@ const StudentManager = () => {
         data: exportData
           .filter(
             s =>
-              s.batch_relation?.batch_name ===
+              s.batch?.batch_name ===
               batch
           )
           .map(mapStudent),
@@ -716,7 +716,7 @@ const StudentManager = () => {
           s =>
             s.status !== "active" ||
             !s.notes_access ||
-            !s.batch_relation
+            !s.batch
         )
         .map(mapStudent),
     });
@@ -837,7 +837,7 @@ const StudentManager = () => {
         (s) =>
           s.status !== "active" ||
           !s.notes_access ||
-          !s.batch_relation
+          !s.batch
       );
     }
 
@@ -854,7 +854,7 @@ const StudentManager = () => {
       "Mobile": student.mobile,
       "Email": student.email,
       "Course": student.course?.course_name || "",
-      "Batch": student.batch_relation?.batch_name || "Not Assigned",
+      "Batch": student.batch?.batch_name || "Not Assigned",
       "Status": student.status,
     }));
 

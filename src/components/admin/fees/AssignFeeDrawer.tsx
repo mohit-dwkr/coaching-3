@@ -7,95 +7,107 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { AlertCircle, CheckCircle2, Receipt, X } from "lucide-react";
 
 interface AssignFeeDrawerProps {
-    isOpen: boolean;
-    onClose: () => void;
-    student: any;
-    onAssigned: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  student: any;
+  onAssigned: () => void;
 }
 
+
+function getCurrentAcademicYear(): string {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+
+  if (month >= 4) {
+    return `${year}-${String(year + 1).slice(-2)}`;
+  }
+
+  return `${year - 1}-${String(year).slice(-2)}`;
+}
+
+
 export default function AssignFeeDrawer({
-    isOpen,
-    onClose,
-    student,
-    onAssigned,
+  isOpen,
+  onClose,
+  student,
+  onAssigned,
 }: AssignFeeDrawerProps) {
-    const [loading, setLoading] = useState(false);
-    const [feeStructures, setFeeStructures] = useState<any[]>([]);
-    const [selectedStructure, setSelectedStructure] = useState("");
-    const [discount, setDiscount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [feeStructures, setFeeStructures] = useState<any[]>([]);
+  const [selectedStructure, setSelectedStructure] = useState("");
+  const [discount, setDiscount] = useState(0);
 
-    const [assignedFee, setAssignedFee] = useState<any | null>(null);
+  const [assignedFee, setAssignedFee] = useState<any | null>(null);
 
-    useEffect(() => {
+  useEffect(() => {
 
-        if (!isOpen) return;
+    if (!isOpen) return;
 
-        loadAssignedFee();
-        fetchFeeStructures();
+    loadAssignedFee();
+    fetchFeeStructures();
 
-    }, [isOpen, student]);
+  }, [isOpen, student]);
 
-    const fetchFeeStructures = async () => {
+  const fetchFeeStructures = async () => {
 
-        console.log("========== ASSIGN FEE ==========");
-        console.log(student);
-        console.log("Student Course ID :", student?.course_id);
-        if (!student?.course_id) return;
+    if (!student?.course_id) return;
 
-        setLoading(true);
+    setLoading(true);
 
-        const { data, error } = await supabase
-            .from("Coaching-3_FeeStructures")
-            .select("*")
-            .eq("course_id", student.course_id)
-            .eq("status", "active");
+    const { data, error } = await supabase
+      .from("Coaching-3_FeeStructures")
+      .select("*")
+      .eq("course_id", student.course_id)
+      .eq("status", "active");
 
-        setLoading(false);
+    setLoading(false);
 
-        if (error) {
-            toast.error(error.message);
-            return;
-        }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
 
-        setFeeStructures(data || []);
-        console.log("Fee Structures :", data);
-        console.log("Error :", error);
-    };
+    setFeeStructures(data || []);
+    console.log("Fee Structures :", data);
+    console.log("Error :", error);
+  };
 
-    const selectedFee = useMemo(() => {
-        return feeStructures.find(
-            (item) => item.id === selectedStructure
+  const selectedFee = useMemo(() => {
+    return feeStructures.find(
+      (item) => item.id === selectedStructure
 
-        );
-    }, [feeStructures, selectedStructure]);
+    );
+  }, [feeStructures, selectedStructure]);
 
 
-    const grandTotal = selectedFee
-        ? Number(selectedFee.total_fee) +
-        Number(selectedFee.admission_fee) +
-        Number(selectedFee.registration_fee)
-        : 0;
+  const grandTotal = selectedFee
+    ? Number(selectedFee.total_fee) +
+    Number(selectedFee.admission_fee) +
+    Number(selectedFee.registration_fee)
+    : 0;
 
-    const finalFee = Math.max(grandTotal - discount, 0);
+  const finalFee = Math.max(grandTotal - discount, 0);
 
 
-    const loadAssignedFee = async () => {
-        if (!student?.id) {
-            setAssignedFee(null);
-            return;
-        }
-        const { data, error } = await supabase
-            .from("Coaching-3_StudentFees")
-            .select(`
+  const loadAssignedFee = async () => {
+    if (!student?.id) {
+      setAssignedFee(null);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("Coaching-3_StudentFees")
+      .select(`
     *,
     fee_structure:fee_structure_id(
         id,
@@ -105,100 +117,111 @@ export default function AssignFeeDrawer({
         duration_months
     ),
     course:course_id(
-        course_name
-    )
+  course_name
+),
+
+batch:batch_id(
+  id,
+  batch_name,
+  course_id
+)
 `)
-            .eq("student_id", student.id)
-            .maybeSingle();
-        if (error) {
-            toast.error(error.message);
-            return;
-        }
-        setAssignedFee(data);
-    };
+      .eq("student_id", student.id)
+      .eq("academic_year", getCurrentAcademicYear())
+      .maybeSingle();
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setAssignedFee(data);
+  };
 
 
-    const handleAssignFee = async () => {
+  const handleAssignFee = async () => {
 
-        if (!selectedFee) {
-            toast.error("Invalid fee structure.");
-            return;
-        }
+    if (!selectedFee) {
+      toast.error("Invalid fee structure.");
+      return;
+    }
 
-        if (!selectedStructure) {
-            toast.error("Please select a fee structure.");
-            return;
-        }
+    if (!selectedStructure) {
+      toast.error("Please select a fee structure.");
+      return;
+    }
 
-        try {
+    try {
+      const academicYear = getCurrentAcademicYear();
+      // Check if fee already assigned
 
-            // Check if fee already assigned
+      const { data: existingFee } = await supabase
+        .from("Coaching-3_StudentFees")
+        .select("id")
+        .eq("student_id", student.id)
+        .eq("academic_year", academicYear)
+        .maybeSingle();
 
-            const { data: existingFee } = await supabase
-                .from("Coaching-3_StudentFees")
-                .select("id")
-                .eq("student_id", student.id)
-                .maybeSingle();
+      if (existingFee) {
+        toast.error(
+          `Fee is already assigned for academic year ${academicYear}.`
+        );
+        return;
+      }
 
-            if (existingFee) {
-                toast.error("Fee is already assigned to this student.");
-                return;
-            }
+      const { error } = await supabase
+        .from("Coaching-3_StudentFees")
+        .insert({
+          student_id: student.id,
+          course_id: student.course_id,
+          batch_id: student.batch_id,
+          academic_year: academicYear,
+          fee_structure_id: selectedStructure,
 
-            const { error } = await supabase
-                .from("Coaching-3_StudentFees")
-                .insert({
-                    student_id: student.id,
-                    course_id: student.course_id,
-                    fee_structure_id: selectedStructure,
+          // Snapshot
+          course_fee: Number(selectedFee.total_fee),
+          admission_fee: Number(selectedFee.admission_fee),
+          registration_fee: Number(selectedFee.registration_fee),
+          duration_months: Number(selectedFee.duration_months),
 
-                    // Snapshot
-                    course_fee: Number(selectedFee.total_fee),
-                    admission_fee: Number(selectedFee.admission_fee),
-                    registration_fee: Number(selectedFee.registration_fee),
-                    duration_months: Number(selectedFee.duration_months),
+          // Totals
+          total_fee: grandTotal,
+          discount: discount,
+          final_fee: finalFee,
+          paid_amount: 0,
+          remaining_amount: finalFee,
+          status: "Pending"
+        });
 
-                    // Totals
-                    total_fee: grandTotal,
-                    discount: discount,
-                    final_fee: finalFee,
-                    paid_amount: 0,
-                    remaining_amount: finalFee,
-                    status: "Pending"
-                });
+      if (error) throw error;
 
-            if (error) throw error;
+      toast.success("Fee assigned successfully.");
 
-            toast.success("Fee assigned successfully.");
+      await loadAssignedFee();
 
-            await loadAssignedFee();
+      onAssigned();
 
-            onAssigned();
+    } catch (err: any) {
 
-        } catch (err: any) {
+      toast.error(err.message);
 
-            toast.error(err.message);
+    }
 
-        }
-
-    };
+  };
 
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-   return (
+  return (
     <>
       {/* Backdrop Blur Overlay with Fade Transition */}
       <div
-        className={`fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${
-          isOpen ? "opacity-100" : "opacity-100" // transition control
-        }`}
+        className={`fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-100" // transition control
+          }`}
         onClick={onClose}
       />
 
       {/* Main Drawer Panel */}
       <div className="fixed inset-y-0 right-0 z-[90] w-full max-w-md bg-slate-50 text-slate-900 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200">
-        
+
         {/* Modern Sticky Header */}
         <div className="flex items-center justify-between px-6 py-5 bg-white border-b border-slate-200/80 shrink-0">
           <div className="flex items-center gap-3">
@@ -227,7 +250,7 @@ export default function AssignFeeDrawer({
         <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
           {!assignedFee ? (
             <div className="space-y-5">
-              
+
               {/* Readonly Info Section */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -259,7 +282,7 @@ export default function AssignFeeDrawer({
                   </Label>
                   <Input
                     value={
-                      student?.batch_relation?.batch_name || "Not Assigned"
+                      student?.batch?.batch_name || "Not Assigned"
                     }
                     disabled
                     className="bg-slate-50 border-slate-200 font-semibold text-slate-800 disabled:opacity-100 rounded-xl"
@@ -366,7 +389,7 @@ export default function AssignFeeDrawer({
           ) : (
             /* Fee Already Assigned State View */
             <div className="space-y-5">
-              
+
               {/* Success Badge Banner */}
               <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-teal-50/30 p-5 shadow-sm">
                 <div className="flex items-center gap-2.5 text-emerald-700 font-extrabold text-base">
@@ -418,7 +441,7 @@ export default function AssignFeeDrawer({
                       {assignedFee.duration_months} Months
                     </span>
                   </div>
-                  
+
                   <div className="pt-2 border-t border-slate-100 flex justify-between">
                     <span className="font-semibold text-slate-700">Remaining Due</span>
                     <span className="font-extrabold text-rose-600">

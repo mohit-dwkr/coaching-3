@@ -37,7 +37,7 @@ export function generateReceiptData(
       studentFee.course?.course_name || "-",
 
     batch:
-      studentFee.student?.batch?.batch_name || "-",
+      studentFee.batch?.batch_name || "-",
 
     amount:
       payment.amount,
@@ -52,10 +52,10 @@ export function generateReceiptData(
       payment.transaction_id || "",
 
     validFrom:
-      payment.valid_from,
+      payment.fee_period_from,
 
     validUntil:
-      payment.valid_until,
+      payment.fee_period_to,
 
     remarks:
       payment.remark || "",

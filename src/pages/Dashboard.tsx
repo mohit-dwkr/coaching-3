@@ -104,7 +104,7 @@ export default function Dashboard() {
     course:course_id(
         course_name
     ),
-    batch_relation:batch_id(
+    batch:batch_id(
         batch_name
     )
 `)

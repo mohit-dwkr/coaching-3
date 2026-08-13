@@ -60,6 +60,10 @@ export default function DashboardTab({
     }
     console.log(dashboardData);
     console.log(dashboardData.attendance);
+
+    console.log("Current Attendance:", dashboardData.attendance);
+    console.log("Attendance History:", dashboardData.attendanceHistory);
+
     return (
 
         <div className="space-y-6">
@@ -70,6 +74,7 @@ export default function DashboardTab({
 
             <AttendanceSection
                 data={dashboardData.attendance}
+                history={dashboardData.attendanceHistory}
             />
 
             <FeeSection

@@ -38,8 +38,7 @@ export default function ExportFeesModal({
     onExportExcel,
     onPrint,
 }: ExportFeesModalProps) {
-    console.log("Courses Prop", courses);
-
+   
     const [reportType, setReportType] =
         useState("current");
 

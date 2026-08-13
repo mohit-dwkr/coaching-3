@@ -64,7 +64,7 @@ export default function AttendanceManager() {
                     .select(`
           *,
           course:Coaching-3_Courses(course_name),
-          batch_relation:Coaching-3_StudentBatches(batch_name)
+          batch:Coaching-3_StudentBatches(batch_name)
         `)
                     .eq("status", "active")
                     .order("name")
@@ -241,7 +241,7 @@ export default function AttendanceManager() {
         course_name
       ),
 
-      batch_relation:Coaching-3_StudentBatches(
+      batch:Coaching-3_StudentBatches(
         batch_name
       )
     ),
@@ -323,7 +323,7 @@ export default function AttendanceManager() {
                                 record.student?.course?.course_name || "",
 
                             Batch:
-                                record.student?.batch_relation?.batch_name || "",
+                                record.student?.batch?.batch_name || "",
 
                             Status:
                                 record.status,
@@ -361,7 +361,7 @@ export default function AttendanceManager() {
                     course_name
                 ),
 
-                batch_relation:Coaching-3_StudentBatches(
+                batch:Coaching-3_StudentBatches(
                     batch_name
                 )
             ),
@@ -431,7 +431,7 @@ export default function AttendanceManager() {
                                 record.student?.course?.course_name || "",
 
                             Batch:
-                                record.student?.batch_relation?.batch_name || "",
+                                record.student?.batch?.batch_name || "",
 
                             Status: record.status,
 
@@ -466,7 +466,7 @@ export default function AttendanceManager() {
                     course_name
                 ),
 
-                batch_relation:Coaching-3_StudentBatches(
+                batch:Coaching-3_StudentBatches(
                     batch_name
                 )
             ),
@@ -536,7 +536,7 @@ export default function AttendanceManager() {
                                 record.student?.course?.course_name || "",
 
                             Batch:
-                                record.student?.batch_relation?.batch_name || "",
+                                record.student?.batch?.batch_name || "",
 
                             Status: record.status,
 
@@ -878,7 +878,7 @@ export default function AttendanceManager() {
                     course_name
                 ),
 
-                batch_relation:Coaching-3_StudentBatches(
+                batch:Coaching-3_StudentBatches(
                     batch_name
                 )
             ),
@@ -942,7 +942,7 @@ export default function AttendanceManager() {
                     record.student?.course?.course_name || "",
 
                 Batch:
-                    record.student?.batch_relation?.batch_name || "",
+                    record.student?.batch?.batch_name || "",
 
                 Status: record.status,
 
@@ -979,7 +979,7 @@ export default function AttendanceManager() {
                     course_name
                 ),
 
-                batch_relation:Coaching-3_StudentBatches(
+                batch:Coaching-3_StudentBatches(
                     batch_name
                 )
             ),
@@ -1038,7 +1038,7 @@ export default function AttendanceManager() {
 
                 Course: record.student?.course?.course_name || "",
 
-                Batch: record.student?.batch_relation?.batch_name || "",
+                Batch: record.student?.batch?.batch_name || "",
 
                 Status: record.status,
 
@@ -1076,7 +1076,7 @@ export default function AttendanceManager() {
                     course_name
                 ),
 
-                batch_relation:Coaching-3_StudentBatches(
+                batch:Coaching-3_StudentBatches(
                     batch_name
                 )
             ),
@@ -1135,7 +1135,7 @@ export default function AttendanceManager() {
 
                 Course: record.student?.course?.course_name || "",
 
-                Batch: record.student?.batch_relation?.batch_name || "",
+                Batch: record.student?.batch?.batch_name || "",
 
                 Status: record.status,
 

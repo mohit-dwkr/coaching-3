@@ -129,13 +129,15 @@ export default function Admin() {
     const { data, error } = await supabase
       .from("Coaching-3_Admins")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at");
 
     if (error) {
       console.error(error);
       toast.error("Failed to load admins");
       return;
     }
+
+   
 
     setAdmins(data ?? []);
 

@@ -32,6 +32,8 @@ export interface StudentFeeData {
   course_id: string;
   fee_structure_id: string | null;
 
+  academic_year?: string;
+
   total_fee: number;
   discount: number;
   final_fee: number;
@@ -74,9 +76,16 @@ export interface StudentFeeData {
       course_id: string;
     };
   };
+
   course?: {
     id: string;
     course_name: string;
+  };
+
+  batch?: {
+    id: string;
+    batch_name: string;
+    course_id?: string;
   };
 
   fee_structure?: FeeStructure;
@@ -122,9 +131,9 @@ export interface PaymentHistory {
 
   months_covered: number;
 
-  valid_from: string;
+  fee_period_from: string;
 
-  valid_until: string;
+  fee_period_to: string;
 
   is_manual_override: boolean;
 
@@ -132,6 +141,7 @@ export interface PaymentHistory {
 }
 
 export interface FeeTransaction {
+
   id: string;
 
   student_fee_id: string;
@@ -155,11 +165,30 @@ export interface FeeTransaction {
 
   months_covered: number;
 
-  valid_from?: string | null;
+  fee_period_from?: string | null;
 
-  valid_until?: string | null;
+  fee_period_to?: string | null;
 
   is_manual_override: boolean;
+
+  student_fee?: {
+    student?: {
+      id: number;
+      student_id: string;
+      name: string;
+    };
+
+    course?: {
+      id: string;
+      course_name: string;
+    };
+
+    batch?: {
+      id: string;
+      batch_name: string;
+      course_id?: string;
+    };
+  };
 }
 
 
@@ -210,12 +239,17 @@ import { Dispatch, SetStateAction } from "react";
 
 export interface PaymentFormData {
   amount: string;
+
   paymentDate: Date;
+
+  feePeriodFrom: Date | null;
 
   paymentMode: PaymentMode;
 
   monthsCovered: number;
+
   referenceNo: string;
+
   remarks: string;
 }
 

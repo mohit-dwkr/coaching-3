@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { updateBatchStudentCount } from "@/utils/batchUtils";
+import {
+    getCurrentAcademicYear,
+    getAcademicYearFromDate,
+} from "@/utils/academicYear";
 import { toast } from "sonner";
 
 interface BulkChangeCourseDrawerProps {
@@ -10,6 +14,7 @@ interface BulkChangeCourseDrawerProps {
     onClose: () => void;
     students: any[];
     onUpdated: () => void;
+
 }
 
 export default function BulkChangeCourseDrawer({
@@ -17,7 +22,10 @@ export default function BulkChangeCourseDrawer({
     onClose,
     students,
     onUpdated,
+
 }: BulkChangeCourseDrawerProps) {
+
+    const academicYear = getCurrentAcademicYear();
 
     const [courses, setCourses] = useState<any[]>([]);
     const [selectedCourse, setSelectedCourse] = useState("");
@@ -32,24 +40,24 @@ export default function BulkChangeCourseDrawer({
 
 
     const fetchCourses = async () => {
-    try {
-        setIsLoading(true);
+        try {
+            setIsLoading(true);
 
-        const { data, error } = await supabase
-            .from("Coaching-3_Courses")
-            .select("*")
-            .eq("status", "active")
-            .order("course_name");
+            const { data, error } = await supabase
+                .from("Coaching-3_Courses")
+                .select("*")
+                .eq("status", "active")
+                .order("course_name");
 
-        if (error) throw error;
+            if (error) throw error;
 
-        setCourses(data ?? []);
-    } catch (err: any) {
-        toast.error(err.message);
-    } finally {
-        setIsLoading(false);
-    }
-};
+            setCourses(data ?? []);
+        } catch (err: any) {
+            toast.error(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
 
     const changeBulkCourse = async () => {
@@ -64,7 +72,7 @@ export default function BulkChangeCourseDrawer({
         }
 
         const allSameCourse = students.every(
-            student => student.course_id === selectedCourse
+            (student) => student.course_id === selectedCourse
         );
 
         if (allSameCourse) {
@@ -72,37 +80,193 @@ export default function BulkChangeCourseDrawer({
             return;
         }
 
-        const oldBatchIds = [
-            ...new Set(
-                students
-                    .map(student => student.batch_id)
-                    .filter(Boolean)
-            ),
-        ];
-
         try {
+            setIsLoading(true);
 
+            /*
+             * STEP 1
+             * Fetch current academic-year fee records
+             * for all selected students.
+             *
+             * Previous-year fee records are intentionally ignored.
+             */
+            const studentIds = students.map((student) => student.id);
+
+            const { data: feeRecords, error: feeError } = await supabase
+                .from("Coaching-3_StudentFees")
+                .select(`
+        id,
+        student_id,
+        academic_year,
+        paid_amount,
+        remaining_amount,
+        status
+      `)
+                .in("student_id", studentIds)
+                .eq("academic_year", academicYear);
+
+            if (feeError) {
+                throw feeError;
+            }
+
+            const currentFeeRecords = feeRecords ?? [];
+
+
+            // ============================
+            // STEP 2 — ATTENDANCE CHECK
+            // ============================
+
+            const {
+                data: attendanceRecords,
+                error: attendanceError,
+            } = await supabase
+                .from("Coaching-3_AttendanceRecords")
+                .select(`
+        student_id,
+        session:Coaching-3_AttendanceSessions!attendance_records_session_fk(
+            attendance_date
+        )
+    `)
+                .in("student_id", studentIds);
+
+            if (attendanceError) {
+                throw attendanceError;
+            }
+
+            const currentYearAttendanceStudentIds = new Set(
+                (attendanceRecords ?? [])
+                    .filter((record: any) => {
+                        const attendanceDate =
+                            record.session?.attendance_date;
+
+                        if (!attendanceDate) return false;
+
+                        return (
+                            getAcademicYearFromDate(attendanceDate) ===
+                            academicYear
+                        );
+                    })
+                    .map((record: any) => record.student_id)
+            );
+
+            if (currentYearAttendanceStudentIds.size > 0) {
+                const blockedStudents = students.filter((student) =>
+                    currentYearAttendanceStudentIds.has(student.id)
+                );
+
+                const names = blockedStudents
+                    .map((student) => student.name)
+                    .join(", ");
+
+                toast.error(
+                    `Course change blocked. ${names} ${blockedStudents.length === 1 ? "has" : "have"
+                    } attendance recorded in the current academic year.`
+                );
+
+                return;
+            }
+
+
+            /*
+             * STEP 2
+             * Find students who have already paid something
+             * in the CURRENT academic year.
+             *
+             * These students cannot change course.
+             */
+            const paidStudents = currentFeeRecords.filter(
+                (fee) => Number(fee.paid_amount) > 0
+            );
+
+            if (paidStudents.length > 0) {
+                const blockedStudentIds = new Set(
+                    paidStudents.map((fee) => fee.student_id)
+                );
+
+                const blockedStudents = students.filter((student) =>
+                    blockedStudentIds.has(student.id)
+                );
+
+                const names = blockedStudents
+                    .map((student) => student.name)
+                    .join(", ");
+
+                toast.error(
+                    `Course change blocked. ${names} ${blockedStudents.length === 1 ? "has" : "have"
+                    } already paid fees in the current academic year.`
+                );
+
+                return;
+            }
+
+            /*
+             * STEP 3
+             *
+             * Students who have a current-year fee record
+             * but paid_amount = 0 can change course.
+             *
+             * Their old fee assignment will be removed first.
+             *
+             * This makes them appear again in the
+             * Unassigned Fees section.
+             */
+            const unpaidCurrentFees = currentFeeRecords.filter(
+                (fee) => Number(fee.paid_amount) === 0
+            );
+
+            for (const fee of unpaidCurrentFees) {
+                const { error: deleteFeeError } = await supabase
+                    .from("Coaching-3_StudentFees")
+                    .delete()
+                    .eq("id", fee.id);
+
+                if (deleteFeeError) {
+                    throw deleteFeeError;
+                }
+            }
+
+            /*
+             * STEP 4
+             * Remember old batches so their student counts
+             * can be recalculated after the course change.
+             */
+            const oldBatchIds = [
+                ...new Set(
+                    students
+                        .map((student) => student.batch_id)
+                        .filter(Boolean)
+                ),
+            ];
+
+            /*
+             * STEP 5
+             * Change course and remove batch assignment.
+             *
+             * New course will require a fresh batch assignment.
+             */
             for (const student of students) {
-
-                // Update Students Table
-
                 const { error: studentError } = await supabase
                     .from("Coaching-3_Students")
                     .update({
                         course_id: selectedCourse,
 
+                        // Course changed → old batch is no longer valid
                         batch_id: null,
                         batch: "Not Assigned",
+
                         roll_number: null,
 
                         updated_at: new Date().toISOString(),
                     })
                     .eq("id", student.id);
 
-                if (studentError) throw studentError;
+                if (studentError) {
+                    throw studentError;
+                }
 
-                // Update Approval Table
-
+                /*
+                 * Keep approval/enrollment information synchronized.
+                 */
                 const { error: approvalError } = await supabase
                     .from("Coaching-3_StudentApprovals")
                     .update({
@@ -111,25 +275,36 @@ export default function BulkChangeCourseDrawer({
                     })
                     .eq("user_id", student.user_id);
 
-                if (approvalError) throw approvalError;
+                if (approvalError) {
+                    throw approvalError;
+                }
             }
 
-            // Update old batch counts
-
+            /*
+             * STEP 6
+             * Update old batch counts.
+             */
             for (const batchId of oldBatchIds) {
                 await updateBatchStudentCount(batchId);
             }
 
-            toast.success("Course updated successfully.");
+            toast.success(
+                "Course updated successfully. Students now need a new batch and fee structure."
+            );
 
             onUpdated();
-
             onClose();
 
         } catch (err: any) {
-            toast.error(err.message);
-        }
+            console.error("BULK COURSE CHANGE ERROR:", err);
 
+            toast.error(
+                err?.message || "Failed to change course."
+            );
+
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     if (!isOpen) return null;
