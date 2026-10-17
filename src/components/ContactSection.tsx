@@ -226,7 +226,7 @@ export default function ContactSection() {
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 font-bold uppercase tracking-tight">Call Support</p>
-                  <p className="text-sm font-semibold text-slate-800">+91 9630955951</p>
+                  <p className="text-sm font-semibold text-slate-800">+91 9630xxxxxx</p>
                 </div>
               </div>
 
@@ -236,7 +236,7 @@ export default function ContactSection() {
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 font-bold uppercase tracking-tight">Mail Inquiry</p>
-                  <p className="text-sm font-semibold text-slate-800">diwakarmohit0007@gmail.com</p>
+                  <p className="text-sm font-semibold text-slate-800">gmail@gmail.com</p>
                 </div>
               </div>
             </div>
